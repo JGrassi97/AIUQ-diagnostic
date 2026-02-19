@@ -4,11 +4,14 @@ DEFAULT:
       # Defaults
       - "%PROJDIR%/AIUQ-engine/conf/platforms.yml"
       - "%PROJDIR%/AIUQ-engine/conf/general.yml"
-
       # Model specific
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/models/%MODEL.NAME%/%MODEL.NAME%.yml"
-
       # Initial conditions specific
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/ics/%MODEL.ICS%/%MODEL.ICS%.yml"
 
+
+      # MERGER
+      - "%PROJDIR%/conf/jobs/merger.yml"
+
+      # Experiment specific
       - "%PROJDIR%/conf/jobs/simple_plot.yml"

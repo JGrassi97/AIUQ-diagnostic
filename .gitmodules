@@ -1,0 +1,3 @@
+[submodule "AIUQ-engine"]
+	path = AIUQ-engine
+	url = https://github.com/JGrassi97/AIUQ.git

@@ -10,3 +10,5 @@ DEFAULT:
 
       # Initial conditions specific
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/ics/%MODEL.ICS%/%MODEL.ICS%.yml"
+
+      - "%PROJDIR%/conf/jobs/simple_plot.yml"

@@ -1,0 +1,9 @@
+JOBS:
+
+  SIMPLE_PLOT:
+    FILE: templates/warmup_regrid.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: ONCE
+    DEPENDENCIES: SYNCHRONIZE
+    NODES: 1
+    PROCESSORS: 80

@@ -1,9 +1,9 @@
 JOBS:
 
   SIMPLE_PLOT:
-    FILE: templates/warmup_regrid.sh,templates/config.yml
+    FILE: templates/simple_plot.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
-    RUNNING: ONCE
-    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: DATE
+    DEPENDENCIES: CLEAN
     NODES: 1
     PROCESSORS: 80

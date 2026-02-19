@@ -1,0 +1,21 @@
+#!/bin/bash
+
+HPCROOTDIR=%HPCROOTDIR%
+PROJDIR=%PROJDIR%
+
+
+RUNSCRIPT_PATH=$PROJDIR/runscripts/
+RUNSCRIPT_PATH_ENGINE=$PROJDIR/AIUQ-engine/runscripts/
+
+LIB_PATH=$PROJDIR/lib/
+LIB_PATH_ENGINE=$PROJDIR/AIUQ-engine/lib/
+
+TEMPLATES_PATH=$PROJDIR/templates/
+TEMPLATES_PATH_ENGINE=$PROJDIR/AIUQ-engine/templates/
+
+
+# Sybc from engine to path. Since its all local no need to use ssh
+
+scp -r $RUNSCRIPT_PATH_ENGINE/* $RUNSCRIPT_PATH
+scp -r $LIB_PATH_ENGINE/* $LIB_PATH
+scp -r $TEMPLATES_PATH_ENGINE/* $TEMPLATES_PATH

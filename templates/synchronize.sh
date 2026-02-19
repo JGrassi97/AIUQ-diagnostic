@@ -1,0 +1,1 @@
+../AIUQ-engine/templates/synchronize.sh

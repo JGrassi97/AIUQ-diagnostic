@@ -3,7 +3,7 @@ JOBS:
   SIMPLE_PLOT:
     FILE: templates/simple_plot.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
-    RUNNING: DATE
+    RUNNING: CHUNK
     DEPENDENCIES: CLEAN
     NODES: 1
     PROCESSORS: 80

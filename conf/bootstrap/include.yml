@@ -1,0 +1,5 @@
+DEFAULT:
+  CUSTOM_CONFIG:
+    PRE:
+      # Defaults
+      - "%PROJDIR%/AIUQ-engine/conf/platforms.yml"

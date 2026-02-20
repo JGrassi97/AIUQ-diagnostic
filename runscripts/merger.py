@@ -22,6 +22,8 @@ if __name__ == "__main__":
         with xr.open_mfdataset([f"{_OUTPUT_PATH}/{file}" for file in all_files], combine='by_coords') as dataset:
                 dataset.to_zarr(f"{_OUTPUT_PATH}/ngcm-diagnostic.zarr", consolidated=True)
 
-        
+        # Remove individual files
+        for file in all_files:
+                os.remove(f"{_OUTPUT_PATH}/{file}")
 
         

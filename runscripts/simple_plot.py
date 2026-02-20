@@ -1,7 +1,6 @@
 import xarray as xr
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 import sys
 
@@ -23,38 +22,42 @@ def _preprocess_longitude(ds):
         return ds
 
 if __name__ == "__main__":
-    
-    # Read config
-    args = parse_arguments()
-    config = read_config(args.config)
 
-    _OUTPUT_PATH        = config.get("OUTPUT_PATH", "")
-    _OUT_VARS           = config.get("OUT_VARS", [])
-    _OUT_FREQ           = config.get("OUT_FREQ", "")
-    _OUT_RES            = config.get("OUT_RES", "")
-    _OUT_LEVS           = config.get("OUT_LEVS", "")
-    _RNG_KEY            = config.get("RNG_KEY", 1)
-    _START_TIME         = config.get("START_TIME", "")
-    _END_TIME           = config.get("END_TIME", "")
+        # Read config
+        args = parse_arguments()
+        config = read_config(args.config)
 
-    # Format output variables and select
-    output_vars = normalize_out_vars(_OUT_VARS)
-    for var in output_vars:
+        _OUTPUT_PATH        = config.get("OUTPUT_PATH", "")
+        _OUT_VARS           = config.get("OUT_VARS", [])
+        _OUT_FREQ           = config.get("OUT_FREQ", "")
+        _OUT_RES            = config.get("OUT_RES", "")
+        _OUT_LEVS           = config.get("OUT_LEVS", "")
+        _RNG_KEY            = config.get("RNG_KEY", 1)
+        _START_TIME         = config.get("START_TIME", "")
+        _END_TIME           = config.get("END_TIME", "")
 
-        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
-        os.makedirs(OUTPUT_BASE_PATH, exist_ok=True)
-        OUTPUT_FILE = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
-        
-        with xr.open_dataset(OUTPUT_FILE) as dataset:
-                dataset = _preprocess_one_file(dataset)
-                dataset = _preprocess_longitude(dataset)
-                image_path = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.png"
-                
-                weights = np.cos(np.deg2rad(dataset.latitude))
-                ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])
+        # Format output variables and select
+        output_vars = normalize_out_vars(_OUT_VARS)
 
-                avg = dataset[var].rename(f'global_{var}').expand_dims(member=[_RNG_KEY+1])
+        for var in output_vars:
 
-                dataset.to_netcdf(f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}_postproc.nc")
-        
+                OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
+                os.makedirs(OUTPUT_BASE_PATH, exist_ok=True)
+                OUTPUT_FILE = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
+
+                all_datasets = []
+                with xr.open_dataset(OUTPUT_FILE) as dataset:
+                        dataset = _preprocess_one_file(dataset)
+                        dataset = _preprocess_longitude(dataset)
+                        image_path = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.png"
+                        
+                        weights = np.cos(np.deg2rad(dataset.latitude))
+                        ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])
+
+                        avg = dataset[var].rename(f'global_{var}').expand_dims(member=[_RNG_KEY+1])
+                        all_datasets.append(avg)
+
+        all_datasets = xr.concat(all_datasets, dim='member')
+        all_datasets.to_netcdf(f"{_OUTPUT_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}_postproc.nc")
+
         os.remove(OUTPUT_FILE)

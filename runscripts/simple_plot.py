@@ -38,14 +38,14 @@ if __name__ == "__main__":
 
         # Format output variables and select
         output_vars = normalize_out_vars(_OUT_VARS)
-
+        all_datasets = []
         for var in output_vars:
 
                 OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
                 os.makedirs(OUTPUT_BASE_PATH, exist_ok=True)
                 OUTPUT_FILE = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
 
-                all_datasets = []
+                
                 with xr.open_dataset(OUTPUT_FILE) as dataset:
                         dataset = _preprocess_one_file(dataset)
                         dataset = _preprocess_longitude(dataset)

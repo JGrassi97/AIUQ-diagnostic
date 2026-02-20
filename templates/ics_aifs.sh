@@ -1,1 +1,0 @@
-../AIUQ-engine/templates/ics_aifs.sh

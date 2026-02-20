@@ -1,1 +1,0 @@
-../AIUQ-engine/templates/postprocess_aifs.sh

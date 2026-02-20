@@ -49,6 +49,6 @@ if __name__ == "__main__":
         dataset = _preprocess_longitude(dataset)
 
         image_path = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.png"
-        dataset[var].isel(time=0).plot()
-        plt.savefig(image_path)
-        plt.close()
+        
+        weights = np.cos(np.deg2rad(dataset.latitude))
+        ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])

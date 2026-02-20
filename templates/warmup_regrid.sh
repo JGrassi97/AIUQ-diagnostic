@@ -1,1 +1,0 @@
-../AIUQ-engine/templates/warmup_regrid.sh

@@ -1,1 +1,0 @@
-../AIUQ-engine/templates/sim_neuralgcm.sh

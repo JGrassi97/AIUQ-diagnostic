@@ -3,7 +3,7 @@ DEFAULT:
     PRE:
       # Defaults
       - "%PROJDIR%/AIUQ-engine/conf/platforms.yml"
-      - "%PROJDIR%/AIUQ-engine/conf/general.yml"
+      - "%PROJDIR%/conf/general.yml"  # General from local to override syncronize dependencies
       # Model specific
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/models/%MODEL.NAME%/%MODEL.NAME%.yml"
       # Initial conditions specific

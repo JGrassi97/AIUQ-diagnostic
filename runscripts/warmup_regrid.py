@@ -1,1 +1,0 @@
-../AIUQ-engine/runscripts/warmup_regrid.py

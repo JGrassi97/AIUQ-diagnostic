@@ -1,1 +1,0 @@
-../AIUQ-engine/templates/prepare_ics.sh

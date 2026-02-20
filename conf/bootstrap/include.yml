@@ -9,7 +9,5 @@ DEFAULT:
       # Initial conditions specific
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/ics/%MODEL.ICS%/%MODEL.ICS%.yml"
 
-      # MERGER
-      - "%PROJDIR%/conf/jobs/merger.yml"
       # Experiment specific
       - "%PROJDIR%/conf/jobs/simple_plot.yml"

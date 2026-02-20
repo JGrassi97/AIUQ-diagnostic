@@ -56,8 +56,10 @@ if __name__ == "__main__":
 
                         avg = dataset[var].rename(f'global_{var}').expand_dims(member=[str(int(_RNG_KEY)+1)])
                         all_datasets.append(avg)
+                
+                os.remove(OUTPUT_FILE)
 
         all_datasets = xr.concat(all_datasets, dim='member')
         all_datasets.to_netcdf(f"{_OUTPUT_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}_postproc.nc")
 
-        os.remove(OUTPUT_FILE)
+        

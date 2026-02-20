@@ -45,10 +45,16 @@ if __name__ == "__main__":
         os.makedirs(OUTPUT_BASE_PATH, exist_ok=True)
         OUTPUT_FILE = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
         
-        dataset = xr.open_dataset(OUTPUT_FILE, preprocess=_preprocess_one_file)
-        dataset = _preprocess_longitude(dataset)
+        with xr.open_dataset(OUTPUT_FILE) as dataset:
+                dataset = _preprocess_one_file(dataset)
+                dataset = _preprocess_longitude(dataset)
+                image_path = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.png"
+                
+                weights = np.cos(np.deg2rad(dataset.latitude))
+                ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])
 
-        image_path = f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.png"
+                avg = dataset[var].rename(f'global_{var}').expand_dims(member=[_RNG_KEY+1])
+
+                dataset.to_netcdf(f"{OUTPUT_BASE_PATH}/ngcm-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}_postproc.nc")
         
-        weights = np.cos(np.deg2rad(dataset.latitude))
-        ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])
+        os.remove(OUTPUT_FILE)

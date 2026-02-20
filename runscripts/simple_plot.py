@@ -54,7 +54,7 @@ if __name__ == "__main__":
                         weights = np.cos(np.deg2rad(dataset.latitude))
                         ds_avg = dataset.weighted(weights).mean(dim=['latitude', 'longitude'])
 
-                        avg = dataset[var].rename(f'global_{var}').expand_dims(member=[_RNG_KEY+1])
+                        avg = dataset[var].rename(f'global_{var}').expand_dims(member=[str(int(_RNG_KEY)+1)])
                         all_datasets.append(avg)
 
         all_datasets = xr.concat(all_datasets, dim='member')

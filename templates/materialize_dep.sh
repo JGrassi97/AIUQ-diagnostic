@@ -36,11 +36,19 @@ for p in "$SUBMODULE_DIR/conf/AIUQ-st/"*; do
   link_if_missing "../AIUQ-engine/conf/AIUQ-st/$base" "conf/AIUQ-st/$base"
 done
 
-# ---- conf/cards (qui hai sottocartelle ics/models: linka ricorsivo) ----
-mkdir -p conf/cards
-for p in "$SUBMODULE_DIR/conf/cards/"*; do
+# ---- conf/cards/models (qui hai sottocartelle ics/models: linka ricorsivo) ----
+mkdir -p conf/cards/models
+for p in "$SUBMODULE_DIR/conf/cards/models/"*; do
   base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/conf/cards/$base" "conf/cards/$base"
+  link_if_missing "../AIUQ-engine/conf/cards/models/$base" "conf/cards/models/$base"
+done
+
+
+# ---- conf/cards/ics (qui hai sottocartelle ics/models: linka ricorsivo) ----
+mkdir -p conf/cards/ics
+for p in "$SUBMODULE_DIR/conf/cards/ics/"*; do
+  base="$(basename "$p")"
+  link_if_missing "../AIUQ-engine/conf/cards/ics/$base" "conf/cards/ics/$base"
 done
 
 # ---- templates ----

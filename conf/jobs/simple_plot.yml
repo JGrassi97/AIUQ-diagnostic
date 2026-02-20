@@ -12,7 +12,7 @@ JOBS:
 
   MERGER:
     CHECK: on_submission
-    FILE: templates/merger.sh
+    FILE: templates/merger.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
     RUNNING: ONCE
     DEPENDENCIES: SIMPLE_PLOT

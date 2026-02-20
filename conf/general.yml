@@ -5,11 +5,13 @@ DIRS:
 
 JOBS:
   MATERIALIZE:
+    CHECK: on_submission
     FILE: templates/materialize_dep.sh
     PLATFORM: local
     RUNNING: once
 
   SYNCHRONIZE:
+    CHECK: on_submission
     FILE: templates/synchronize.sh
     PLATFORM: local
     RUNNING: once

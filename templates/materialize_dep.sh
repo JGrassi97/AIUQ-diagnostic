@@ -2,74 +2,59 @@
 set -euo pipefail
 set -x
 
-# Autosubmit variables (vengono sostituite nel template)
 PROJDIR="%PROJDIR%"
 SUBMODULE_DIR="$PROJDIR/AIUQ-engine"
 
-# Vai nella root progetto (così mkdir/controlli sono coerenti)
 cd "$PROJDIR"
 
-# Sanity checks
 if [ ! -d "$SUBMODULE_DIR" ]; then
   echo "ERROR: submodule dir not found: $SUBMODULE_DIR"
-  echo "Content of PROJDIR:"
   ls -la "$PROJDIR"
   exit 1
 fi
 
-# Helper: crea symlink se non esiste già
-link_if_missing () {
-  local src="$1"
-  local dst="$2"
+# Linka ricorsivamente il contenuto di $src_dir dentro $dst_dir
+# - crea directory
+# - crea symlink per file
+link_tree () {
+  local src_dir="$1"
+  local dst_dir="$2"
 
-  if [ -e "$dst" ] || [ -L "$dst" ]; then
-    return 0
-  fi
-  mkdir -p "$(dirname "$dst")"
-  ln -s "$src" "$dst"
+  mkdir -p "$dst_dir"
+
+  # Trova sia file che directory, ricorsivo (esclude .git se presente)
+  # -print0 per gestire spazi
+  find "$src_dir" -mindepth 1 -not -path "*/.git/*" -print0 | while IFS= read -r -d '' item; do
+    # path relativo rispetto a src_dir
+    rel="${item#"$src_dir"/}"
+    dst="$dst_dir/$rel"
+
+    if [ -d "$item" ] && [ ! -L "$item" ]; then
+      # directory reale: crea directory corrispondente
+      mkdir -p "$dst"
+      continue
+    fi
+
+    # item è file oppure symlink (anche a dir): crea symlink nel dst
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+      continue
+    fi
+
+    mkdir -p "$(dirname "$dst")"
+
+    # crea link relativo (più portabile)
+    # calcola un percorso relativo dal dst_dir al src (PROJDIR/AIUQ-engine/...)
+    # qui usiamo un link relativo "pulito" basato sul fatto che dst_dir è sotto PROJDIR
+    # e src_dir è sotto PROJDIR/AIUQ-engine
+    ln -s "$(realpath --relative-to="$(dirname "$dst")" "$item")" "$dst"
+  done
 }
 
-# ---- conf/AIUQ-st (ricorsivo: linka cartelle v000/v010 ecc.) ----
-mkdir -p conf/AIUQ-st
-for p in "$SUBMODULE_DIR/conf/AIUQ-st/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/conf/AIUQ-st/$base" "conf/AIUQ-st/$base"
-done
+# --- link solo le parti che ti servono ---
+link_tree "$SUBMODULE_DIR/conf/AIUQ-st"     "$PROJDIR/conf/AIUQ-st"
+link_tree "$SUBMODULE_DIR/conf/cards"      "$PROJDIR/conf/cards"
+link_tree "$SUBMODULE_DIR/templates"       "$PROJDIR/templates"
+link_tree "$SUBMODULE_DIR/runscripts"      "$PROJDIR/runscripts"
+link_tree "$SUBMODULE_DIR/lib"             "$PROJDIR/lib"
 
-# ---- conf/cards/models (qui hai sottocartelle ics/models: linka ricorsivo) ----
-mkdir -p conf/cards/models
-for p in "$SUBMODULE_DIR/conf/cards/models/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/conf/cards/models/$base" "conf/cards/models/$base"
-done
-
-
-# ---- conf/cards/ics (qui hai sottocartelle ics/models: linka ricorsivo) ----
-mkdir -p conf/cards/ics
-for p in "$SUBMODULE_DIR/conf/cards/ics/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/conf/cards/ics/$base" "conf/cards/ics/$base"
-done
-
-# ---- templates ----
-mkdir -p templates
-for p in "$SUBMODULE_DIR/templates/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/templates/$base" "templates/$base"
-done
-
-# ---- runscripts ----
-mkdir -p runscripts
-for p in "$SUBMODULE_DIR/runscripts/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/runscripts/$base" "runscripts/$base"
-done
-
-# ---- lib ----
-mkdir -p lib
-for p in "$SUBMODULE_DIR/lib/"*; do
-  base="$(basename "$p")"
-  link_if_missing "../AIUQ-engine/lib/$base" "lib/$base"
-done
-
-echo "OK: symlinks created in $PROJDIR"
+echo "OK: recursive symlink trees created under $PROJDIR"

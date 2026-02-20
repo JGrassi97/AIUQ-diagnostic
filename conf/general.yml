@@ -5,7 +5,7 @@ DIRS:
 
 JOBS:
   MATERIALIZE:
-    FILE: templates/materialize.sh
+    FILE: templates/materialize_dep.sh
     PLATFORM: local
     RUNNING: once
 

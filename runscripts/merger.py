@@ -19,7 +19,7 @@ if __name__ == "__main__":
         all_files = os.listdir(_OUTPUT_PATH)
 
         # Open and merge
-        with xr.open_mfdataset([f"{_OUTPUT_PATH}/{file}" for file in all_files], combine='by_coords') as dataset:
+        with xr.open_mfdataset([f"{_OUTPUT_PATH}/{file}" for file in all_files], combine='by_coords', engine='netcdf4') as dataset:
                 dataset.to_zarr(f"{_OUTPUT_PATH}/ngcm-diagnostic.zarr", consolidated=True)
 
         # Remove individual files

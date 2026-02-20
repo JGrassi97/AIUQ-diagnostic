@@ -3,7 +3,7 @@ set -euo pipefail
 set -x
 
 # Autosubmit variables (vengono sostituite nel template)
-PROJDIR="%PROJECT.PROJECT_DESTINATION%"
+PROJDIR="%PROJDIR%"
 SUBMODULE_DIR="$PROJDIR/AIUQ-engine"
 
 # Vai nella root progetto (così mkdir/controlli sono coerenti)

@@ -18,6 +18,9 @@ if __name__ == "__main__":
 
         all_files = os.listdir(_OUTPUT_PATH)
 
+        # Combine path with file names
+        all_files = [os.path.join(_OUTPUT_PATH, file) for file in all_files]
+
         # Select only nc
         all_files = [file for file in all_files if file.endswith('.nc')]
 

@@ -45,4 +45,4 @@ if __name__ == "__main__":
 
         # Remove individual files
         for file in all_files:
-                os.remove(f"{_OUTPUT_PATH}/{file}")
+                os.remove(file)

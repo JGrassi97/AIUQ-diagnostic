@@ -41,6 +41,6 @@ if __name__ == "__main__":
         ds.to_zarr(os.path.join(_OUTPUT_PATH, "ngcm-diagnostic.zarr"), consolidated=True)
         ds.close()
 
-        # # Remove individual files
-        # for file in all_files:
-        #         os.remove(f"{_OUTPUT_PATH}/{file}")
+        # Remove individual files
+        for file in all_files:
+                os.remove(f"{_OUTPUT_PATH}/{file}")

@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
         ds = xr.open_mfdataset(
                 all_files,
-                combine="by_coords",
+                combine="nested",
                 engine="netcdf4",
                 data_vars="all",
                 coords="all",

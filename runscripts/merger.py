@@ -38,6 +38,8 @@ if __name__ == "__main__":
         print("DATA_VARS:", list(ds.data_vars))
         print("COORDS:", list(ds.coords))
 
+        ds = ds.chunk({'member': 1, 'level': 1, 'time': -1, 'valid_time': -1 })
+
         ds.to_zarr(os.path.join(_OUTPUT_PATH, "ngcm-diagnostic.zarr"), consolidated=True)
         ds.close()
 

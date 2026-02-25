@@ -10,4 +10,4 @@ DEFAULT:
       - "%PROJDIR%/AIUQ-engine/conf/jobs/%PLATFORM.NAME%/ics/%MODEL.ICS%/%MODEL.ICS%.yml"
 
       # Experiment specific
-      - "%PROJDIR%/conf/jobs/simple_plot.yml"
+      - "%PROJDIR%/conf/jobs/RMSE.yml"

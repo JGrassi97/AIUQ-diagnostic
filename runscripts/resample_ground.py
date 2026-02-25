@@ -86,6 +86,8 @@ def main() -> None:
         zarr_format=2)
     
     truth_temp.close()  # Close the temporary zarr store to free up resources
+
+    os.remove(_TRUTH_PATH_TEMP)  # Remove the temporary zarr store to free up disk space
     
 if __name__ == "__main__":
     main()

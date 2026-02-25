@@ -56,7 +56,7 @@ def main() -> None:
     units_dict = {k : v for k, v in units_dict.items() if k in list(rename_dict.values())}
 
     selected = (
-        full_era5[list(ic_names.values())]
+        full_era5[output_vars]
         .rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
         .pipe(reassign_long_names_units, long_names_dict, units_dict)

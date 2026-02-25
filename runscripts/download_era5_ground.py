@@ -67,8 +67,8 @@ def main() -> None:
         .rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
         .sel(level=desired_levels, method='nearest')
-        .pipe(reassign_long_names_units, long_names_dict, units_dict)
-        .pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
+        #.pipe(reassign_long_names_units, long_names_dict, units_dict)
+        #.pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
         #.resample(time="1D").mean()
         )
 
@@ -77,7 +77,9 @@ def main() -> None:
     # selected = selected.sortby('longitude')
     
     # Final part - Saving in zarr
-    final = selected.chunk({"time": 24})        # Chunking by time for efficient access
+    #final = selected.chunk({"time": 24})        # Chunking by time for efficient access
+
+    final = selected
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts
         _TRUTH_PATH_TEMP,

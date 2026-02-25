@@ -33,7 +33,7 @@ def main() -> None:
     _STD_VERSION    = config.get("STD_VERSION", "")
 
     # To add in config
-    _TRUTH_PATH    = os.path.join(_HPCROOTDIR, _START_TIME, 'truth_store')
+    _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store')
 
     # IC settings
     ic_card = read_ic_card(_HPCROOTDIR, _IC)

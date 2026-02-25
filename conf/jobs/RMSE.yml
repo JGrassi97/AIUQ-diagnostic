@@ -1,0 +1,21 @@
+JOBS:
+
+  GET_GROUND_TRUTH:
+    CHECK: on_submission
+    FILE: templates/simple_plot.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: DATE
+    DEPENDENCIES: CLEAN
+    NODES: 1
+    PROCESSORS: 20
+    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+
+  # MERGER:
+  #   CHECK: on_submission
+  #   FILE: templates/merger.sh,templates/config.yml
+  #   PLATFORM: "MARENOSTRUM5ACC"
+  #   RUNNING: ONCE
+  #   DEPENDENCIES: SIMPLE_PLOT
+  #   NODES: 1
+  #   PROCESSORS: 20
+  #   CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"

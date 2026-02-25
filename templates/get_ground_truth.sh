@@ -4,7 +4,7 @@ HPCROOTDIR=%HPCROOTDIR%
 EXPID=%DEFAULT.EXPID%
 JOBNAME=%JOBNAME%
 
-SIF_PATH=%PATHS.SIF_FOLDER%/image_eerie.sif
+SIF_PATH=%PATHS.SIF_FOLDER%/image_era.sif
 
 JOBNAME_WITHOUT_EXPID=$(echo ${JOBNAME} | sed 's/^[^_]*_//')
 
@@ -13,7 +13,6 @@ configfile=$logs_dir/config_${JOBNAME_WITHOUT_EXPID}
 PLATFORM_NAME=%PLATFORM.NAME%
 
 OUTPUT_PATH=%HPCROOTDIR%/outputs
-GRID_FILE=%PATHS.SUPPORT_FOLDER%/aifs_grid.txt
 
 # Load Singularity module only on MareNostrum5
 if [ "$PLATFORM_NAME" = "MARENOSTRUM5" ]; then
@@ -25,4 +24,4 @@ singularity exec --nv \
     --env HPCROOTDIR=$HPCROOTDIR \
     --env configfile=$configfile \
     ${SIF_PATH} \
-    python3 $HPCROOTDIR/runscripts/simple_plot.py -c $configfile
+    python3 $HPCROOTDIR/runscripts/download_era5_ground.py -c $configfile

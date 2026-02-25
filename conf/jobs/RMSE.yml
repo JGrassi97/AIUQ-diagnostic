@@ -2,7 +2,7 @@ JOBS:
 
   GET_GROUND_TRUTH:
     CHECK: on_submission
-    FILE: templates/simple_plot.sh,templates/config.yml
+    FILE: templates/get_ground_truth.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
     RUNNING: DATE
     DEPENDENCIES: CLEAN

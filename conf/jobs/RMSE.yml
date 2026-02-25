@@ -7,6 +7,16 @@ JOBS:
     RUNNING: DATE
     DEPENDENCIES: SYNCHRONIZE
 
+  RESAMPLE_GROUND_TRUTH:
+    CHECK: on_submission
+    FILE: templates/resample_ground_truth.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: DATE
+    DEPENDENCIES: GET_GROUND_TRUTH
+    NODES: 1
+    PROCESSORS: 20
+    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+
   # MERGER:
   #   CHECK: on_submission
   #   FILE: templates/merger.sh,templates/config.yml

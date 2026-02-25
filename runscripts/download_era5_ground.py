@@ -40,7 +40,7 @@ def main() -> None:
         ]
 
     # To add in config
-    _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store')
+    _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store_temp.zarr')
 
     # IC settings
     ic_card = read_ic_card(_HPCROOTDIR, _IC)
@@ -69,25 +69,24 @@ def main() -> None:
         .sel(level=desired_levels, method='nearest')
         .pipe(reassign_long_names_units, long_names_dict, units_dict)
         .pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
-        .resample(time="1D").mean()
+        #.resample(time="1D").mean()
         )
 
     # # Adjust longitudes to -0 - 360
-    selected['longitude'] = selected['longitude'] % 360
-    selected = selected.sortby('longitude')
+    # selected['longitude'] = selected['longitude'] % 360
+    # selected = selected.sortby('longitude')
     
     # Final part - Saving in zarr
-    final = selected.chunk({"time": 1})        # Chunking by time for efficient access
-    final = selected
+    final = selected.chunk({"time": 24})        # Chunking by time for efficient access
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts
-        _TRUTH_PATH,
+        _TRUTH_PATH_TEMP,
         ignore_errors=True)
     
-    os.makedirs(_TRUTH_PATH, exist_ok=True)  # Ensure the directory existss
+    os.makedirs(_TRUTH_PATH_TEMP, exist_ok=True)  # Ensure the directory existss
     
     final.to_zarr(                          # Save to zarr format - using version 2
-        f"{_TRUTH_PATH}",                   # Zarr version 3 has some issues with BytesBytesCodec
+        f"{_TRUTH_PATH_TEMP}",              # Zarr version 3 has some issues with BytesBytesCodec
         mode="w",                           # See https://github.com/pydata/xarray/issues/10032 as reference    
         zarr_format=2)
     

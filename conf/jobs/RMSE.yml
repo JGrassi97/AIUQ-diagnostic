@@ -3,12 +3,9 @@ JOBS:
   GET_GROUND_TRUTH:
     CHECK: on_submission
     FILE: templates/get_ground_truth.sh,templates/config.yml
-    PLATFORM: "MARENOSTRUM5ACC"
+    PLATFORM: "MARENOSTRUM5-LOGIN"
     RUNNING: DATE
-    DEPENDENCIES: CLEAN
-    NODES: 1
-    PROCESSORS: 20
-    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+    DEPENDENCIES: SYNCHRONIZE
 
   # MERGER:
   #   CHECK: on_submission

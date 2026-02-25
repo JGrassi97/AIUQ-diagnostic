@@ -87,7 +87,9 @@ def main() -> None:
     
     truth_temp.close()  # Close the temporary zarr store to free up resources
 
-    os.remove(_TRUTH_PATH_TEMP)  # Remove the temporary zarr store to free up disk space
+    shutil.rmtree(                          # Remove existing data if any - avoid conflicts
+        _TRUTH_PATH_TEMP,
+        ignore_errors=True)
     
 if __name__ == "__main__":
     main()

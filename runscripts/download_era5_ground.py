@@ -25,7 +25,6 @@ def main() -> None:
     args = parse_arguments()
     config = read_config(args.config)
 
-    _INI_DATA_PATH  = config.get('INI_DATA_PATH', "")
     _START_TIME     = config.get("START_TIME", "")
     _END_TIME       = config.get("END_TIME", "")
     _HPCROOTDIR     = config.get("HPCROOTDIR", "")
@@ -74,11 +73,11 @@ def main() -> None:
     final = selected.chunk({"time": 1})        # Chunking by time for efficient access
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts
-        _INI_DATA_PATH,
+        _TRUTH_PATH,
         ignore_errors=True)
     
     final.to_zarr(                          # Save to zarr format - using version 2
-        f"{_INI_DATA_PATH}",                # Zarr version 3 has some issues with BytesBytesCodec
+        f"{_TRUTH_PATH}",                   # Zarr version 3 has some issues with BytesBytesCodec
         mode="w",                           # See https://github.com/pydata/xarray/issues/10032 as reference    
         zarr_format=2)
     

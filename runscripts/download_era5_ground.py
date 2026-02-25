@@ -65,7 +65,7 @@ def main() -> None:
     final = (
         full_era5[output_vars]
         .sel(time=slice(_START_TIME, _END_TIME))
-        .sel(level=desired_levels, method='nearest')
+        #.sel(level=desired_levels, method='nearest')
         )
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts

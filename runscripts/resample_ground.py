@@ -60,7 +60,7 @@ def main() -> None:
 
     truth_temp = xr.open_zarr(_TRUTH_PATH_TEMP, chunks={"time":48})
 
-    truth_temp (
+    truth_temp = (
         truth_temp
         .rename(rename_dict)
         .resample(time="1D").mean()

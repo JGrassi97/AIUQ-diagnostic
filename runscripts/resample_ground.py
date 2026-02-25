@@ -84,5 +84,7 @@ def main() -> None:
         mode="w",                           # See https://github.com/pydata/xarray/issues/10032 as reference    
         zarr_format=2)
     
+    truth_temp.close()  # Close the temporary zarr store to free up resources
+    
 if __name__ == "__main__":
     main()

@@ -62,24 +62,12 @@ def main() -> None:
     long_names_dict = {k : v for k, v in long_names_dict.items() if k in list(rename_dict.values())}
     units_dict = {k : v for k, v in units_dict.items() if k in list(rename_dict.values())}
 
-    selected = (
+    final = (
         full_era5[output_vars]
         .rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
         .sel(level=desired_levels, method='nearest')
-        #.pipe(reassign_long_names_units, long_names_dict, units_dict)
-        #.pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
-        #.resample(time="1D").mean()
         )
-
-    # # Adjust longitudes to -0 - 360
-    # selected['longitude'] = selected['longitude'] % 360
-    # selected = selected.sortby('longitude')
-    
-    # Final part - Saving in zarr
-    #final = selected.chunk({"time": 24})        # Chunking by time for efficient access
-
-    final = selected
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts
         _TRUTH_PATH_TEMP,

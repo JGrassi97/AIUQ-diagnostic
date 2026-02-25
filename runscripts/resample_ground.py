@@ -39,17 +39,36 @@ def main() -> None:
             for plev in _OUT_LEVS.strip('[]').split(',')
         ]
 
+    # IC settings
+    ic_card = read_ic_card(_HPCROOTDIR, _IC)
+    standard_dict = read_std_version(_HPCROOTDIR, _STD_VERSION)
+
+    # Create the mappers between model requirement and IC variables
+    ic_names, rename_dict, long_names_dict, units_dict, missing_vars = define_ics_mappers(
+        ic_card['variables'], 
+        standard_dict['variables']['data']
+        )
+    
+    output_vars = normalize_out_vars(_OUT_VARS)
+    rename_dict = {k : v for k, v in rename_dict.items() if k in output_vars}
+    long_names_dict = {k : v for k, v in long_names_dict.items() if k in list(rename_dict.values())}
+    units_dict = {k : v for k, v in units_dict.items() if k in list(rename_dict.values())}
+
     # To add in config
     _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store_temp.zarr')
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
     truth_temp = xr.open_zarr(_TRUTH_PATH_TEMP, chunks={"time":48})
 
+    truth_temp (
+        truth_temp
+        .resample(time="1D").mean()
+        .pipe(reassign_long_names_units, long_names_dict, units_dict)
+    )
+
     # # Adjust longitudes to -0 - 360
     truth_temp['longitude'] = truth_temp['longitude'] % 360
     truth_temp = truth_temp.sortby('longitude')
-
-    truth_temp = truth_temp.resample(time="1D").mean()  # Resampling to daily means
     
     # Final part - Saving in zarr
     final = truth_temp.chunk({"time": 1})        # Chunking by time for efficient access

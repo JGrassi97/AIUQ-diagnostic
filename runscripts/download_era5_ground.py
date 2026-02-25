@@ -57,10 +57,10 @@ def main() -> None:
 
     selected = (
         full_era5[output_vars]
-        .rename(rename_dict)
+        #.rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
-        .pipe(reassign_long_names_units, long_names_dict, units_dict)
-        .pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
+        #.pipe(reassign_long_names_units, long_names_dict, units_dict)
+        #.pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
         #.resample(time="1D").mean()
         )
 

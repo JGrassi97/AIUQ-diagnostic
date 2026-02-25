@@ -62,7 +62,6 @@ def main() -> None:
         .pipe(reassign_long_names_units, long_names_dict, units_dict)
         .pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
         .resample(time="1D").mean()
-        .compute()
         )
 
     # Adjust longitudes to -0 - 360

@@ -31,6 +31,13 @@ def main() -> None:
     _OUT_VARS       = config.get("OUT_VARS", [])
     _IC             = config.get("IC_NAME", "")
     _STD_VERSION    = config.get("STD_VERSION", "")
+    _OUT_LEVS       = config.get("OUT_LEVS", "")
+
+    if _OUT_LEVS != 'original':
+        desired_levels = [
+            int(plev)
+            for plev in _OUT_LEVS.strip('[]').split(',')
+        ]
 
     # To add in config
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store')
@@ -42,7 +49,7 @@ def main() -> None:
     # Here the specific code to retrieve ERA5 from GCS
     gcs = gcsfs.GCSFileSystem(token="anon")
     ini_data_path_remote = "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3"
-    full_era5 = xr.open_zarr(gcs.get_mapper(ini_data_path_remote), chunks={"time":1})
+    full_era5 = xr.open_zarr(gcs.get_mapper(ini_data_path_remote), chunks={"time":48})
     
     # Create the mappers between model requirement and IC variables
     ic_names, rename_dict, long_names_dict, units_dict, missing_vars = define_ics_mappers(
@@ -59,6 +66,7 @@ def main() -> None:
         full_era5[output_vars]
         #.rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
+        .sel(level=desired_levels, method='nearest')
         #.pipe(reassign_long_names_units, long_names_dict, units_dict)
         #.pipe(check_pressure_levels, ic_card, standard_dict['pressure_levels'])
         #.resample(time="1D").mean()

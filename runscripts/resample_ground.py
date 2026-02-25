@@ -62,6 +62,7 @@ def main() -> None:
 
     truth_temp (
         truth_temp
+        .rename(rename_dict)
         .resample(time="1D").mean()
         .pipe(reassign_long_names_units, long_names_dict, units_dict)
     )

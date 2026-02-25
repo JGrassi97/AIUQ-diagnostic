@@ -64,7 +64,6 @@ def main() -> None:
 
     final = (
         full_era5[output_vars]
-        .rename(rename_dict)
         .sel(time=slice(_START_TIME, _END_TIME))
         .sel(level=desired_levels, method='nearest')
         )

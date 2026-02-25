@@ -68,7 +68,7 @@ def main() -> None:
     selected['longitude'] = selected['longitude'] % 360
     selected = selected.sortby('longitude')
     
-    # Final part - Savimg in zarr
+    # Final part - Saving in zarr
     final = selected.chunk({"time": 1})        # Chunking by time for efficient access
 
     shutil.rmtree(                          # Remove existing data if any - avoid conflicts

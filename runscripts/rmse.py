@@ -57,12 +57,12 @@ def main() -> None:
     output_vars = normalize_out_vars(_OUT_VARS)
 
 
-    OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
+    
     # To add in config
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
     for var in output_vars:
-
+        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
         _MODEL_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
         _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
 

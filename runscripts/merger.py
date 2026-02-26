@@ -58,6 +58,7 @@ def main() -> None:
 
         if not os.path.exists(_COUNTER_FILE):
                 dats = dat_list
+                dats.to_netcdf(_COUNTER_FILE)
 
         else:
                 dats = xr.open_dataset(_COUNTER_FILE)

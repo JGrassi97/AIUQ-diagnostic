@@ -32,7 +32,7 @@ JOBS:
     FILE: templates/merger.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
     RUNNING: DATE
-    DEPENDENCIES: RMSE
+    DEPENDENCIES: CHUNK
     NODES: 1
     PROCESSORS: 20
     CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"

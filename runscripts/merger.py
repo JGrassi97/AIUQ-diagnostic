@@ -53,7 +53,7 @@ def main() -> None:
                         rmse['time'] = lead_time
 
                         dat_list.append(rmse)
-                        #os.remove(_INCRE_FILE)
+                        os.remove(_INCRE_FILE)
 
         dat_list = xr.merge(dat_list)
 

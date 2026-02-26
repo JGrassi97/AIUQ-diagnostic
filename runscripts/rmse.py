@@ -94,7 +94,7 @@ def main() -> None:
         # Save incrementer
         s_err.to_netcdf(_INCRE_FILE)
         model.close()
-        #os.remove(_MODEL_FILE)                    # Remove model output
+        os.remove(_MODEL_FILE)                    # Remove model output
 
     
     truth.close()

@@ -109,12 +109,14 @@ def main() -> None:
         s_err.to_netcdf(_INCRE_FILE)
     
     truth.close()
+    model.close()
 
 
     shutil.rmtree(                          # Remove truth
         _TRUTH_PATH,
         ignore_errors=True)
     
+    os.remove(_MODEL_FILE)                    # Remove model output
     
 if __name__ == "__main__":
     main()

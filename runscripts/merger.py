@@ -1,43 +1,70 @@
-import xarray as xr
-import os
+"""
+
+"""
+
+# Built-in/Generics
+import os 
+import shutil
+import yaml
+
+# Third party
 import numpy as np
+import xarray as xr
+import zarr
 
-import sys
-
+# Local
 from AIUQst_lib.functions import parse_arguments, read_config, normalize_out_vars
+from AIUQst_lib.pressure_levels import check_pressure_levels
+from AIUQst_lib.cards import read_ic_card, read_std_version
+from AIUQst_lib.variables import reassign_long_names_units, define_ics_mappers
 
 
-
-if __name__ == "__main__":
+def main() -> None:
 
         # Read config
         args = parse_arguments()
         config = read_config(args.config)
 
+        _START_TIME     = config.get("START_TIME", "")
+        _END_TIME       = config.get("END_TIME", "")
+        _OUT_VARS       = config.get("OUT_VARS", [])
         _OUTPUT_PATH        = config.get("OUTPUT_PATH", "")
+        _RNG_KEY            = config.get("RNG_KEY", "")
 
-        all_files = os.listdir(_OUTPUT_PATH)
+        output_vars = normalize_out_vars(_OUT_VARS)
 
-        # Combine path with file names
-        all_files = [os.path.join(_OUTPUT_PATH, file) for file in all_files]
+        dat_list = []
+        for var in output_vars:
 
-        # Select only nc
-        all_files = [file for file in all_files if file.endswith('.nc')]
+                OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
+                _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
+                _COUNTER_FILE = f"{_OUTPUT_PATH}/rmse-counter.nc"
 
-        ds = xr.open_mfdataset(
-                all_files,
-                combine="nested",
-                engine="netcdf4"
-                )
+                rmse = xr.open_dataset(_INCRE_FILE)
 
-        print("DATA_VARS:", list(ds.data_vars))
-        print("COORDS:", list(ds.coords))
+                # Add member dimension
+                rmse = rmse.expand_dims(member=str([_RNG_KEY]))
 
-        ds = ds.chunk({'member': 1, 'level': 1, 'time': -1, 'valid_time': -1 })
+                # Change dat time with increasing number of days
+                lead_time = np.arange(0, len(rmse.time.dt.day))
 
-        ds.to_zarr(os.path.join(_OUTPUT_PATH, "ngcm-diagnostic.zarr"), consolidated=True)
-        ds.close()
+                rmse['time'] = lead_time
 
-        # Remove individual files
-        for file in all_files:
-                os.remove(file)
+                dat_list.append(rmse)
+                rmse.close()
+                os.remove(_INCRE_FILE)
+
+        dat_list = xr.merge(dat_list)
+
+        if not os.path.exists(_COUNTER_FILE):
+                dats = dat_list
+
+        else:
+                dats = xr.open_dataset(_COUNTER_FILE)
+                dats_new = dats + dat_list
+                dats.close()
+                dats_new.to_netcdf(_COUNTER_FILE)
+
+    
+if __name__ == "__main__":
+    main()

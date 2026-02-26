@@ -43,7 +43,7 @@ def main() -> None:
                 rmse = xr.open_dataset(_INCRE_FILE)
 
                 # Add member dimension
-                rmse = rmse.expand_dims(member=str([_RNG_KEY]))
+                rmse = rmse.expand_dims(member=[str([_RNG_KEY])])
 
                 # Change dat time with increasing number of days
                 lead_time = np.arange(0, len(rmse.time.dt.day))

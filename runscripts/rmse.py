@@ -106,8 +106,7 @@ def main() -> None:
         s_err = np.square(model - truth)
 
         # Save incrementer
-        s_err_ds = s_err.to_dataset(name=var)
-        s_err_ds.to_netcdf(_INCRE_FILE)
+        s_err.to_netcdf(_INCRE_FILE)
     
     truth.close()
 

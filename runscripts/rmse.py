@@ -112,21 +112,10 @@ def main() -> None:
     truth.close()
 
 
-
-
     shutil.rmtree(                          # Remove truth
         _TRUTH_PATH,
         ignore_errors=True)
     
-    os.makedirs(_TRUTH_PATH, exist_ok=True)  # Ensure the directory existss
-    
-    final.to_zarr(                          # Save to zarr format - using version 2
-        f"{_TRUTH_PATH}",                   # Zarr version 3 has some issues with BytesBytesCodec
-        mode="w",                           # See https://github.com/pydata/xarray/issues/10032 as reference    
-        zarr_format=2)
-    
-    truth_temp.close()  # Close the temporary zarr store to free up resources
-
     
 if __name__ == "__main__":
     main()

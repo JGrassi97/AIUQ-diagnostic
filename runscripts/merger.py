@@ -40,7 +40,7 @@ def main() -> None:
                 _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
                 _COUNTER_FILE = f"{_OUTPUT_PATH}/rmse-counter.nc"
 
-                rmse = xr.open_dataset(_INCRE_FILE)
+                rmse = xr.open_dataset(_INCRE_FILE)[var]
 
                 # Add member dimension
                 rmse = rmse.expand_dims(member=[str([_RNG_KEY])])

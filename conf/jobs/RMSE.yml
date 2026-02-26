@@ -17,12 +17,22 @@ JOBS:
     PROCESSORS: 20
     CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
 
-  # MERGER:
-  #   CHECK: on_submission
-  #   FILE: templates/merger.sh,templates/config.yml
-  #   PLATFORM: "MARENOSTRUM5ACC"
-  #   RUNNING: ONCE
-  #   DEPENDENCIES: SIMPLE_PLOT
-  #   NODES: 1
-  #   PROCESSORS: 20
-  #   CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+  RMSE:
+    CHECK: on_submission
+    FILE: templates/rmse.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: CHUNK
+    DEPENDENCIES: RESAMPLE_GROUND_TRUTH, SIM
+    NODES: 1
+    PROCESSORS: 20
+    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+
+  MERGER:
+    CHECK: on_submission
+    FILE: templates/merger.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: DATE
+    DEPENDENCIES: RMSE
+    NODES: 1
+    PROCESSORS: 20
+    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"

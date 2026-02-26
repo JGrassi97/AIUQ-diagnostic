@@ -48,7 +48,7 @@ def main() -> None:
 
     # Here the specific code to retrieve ERA5 from GCS
     gcs = gcsfs.GCSFileSystem(token="anon")
-    ini_data_path_remote = "gs://gcp-public-data-arco-era5/ar/1959-2022-full_37-6h-0p25deg-chunk-1.zarr-v2"
+    ini_data_path_remote = "gs://gcp-public-data-arco-era5/ar/1959-2022-full_37-6h-0p25deg_derived.zarr"
     full_era5 = xr.open_zarr(gcs.get_mapper(ini_data_path_remote), chunks={"time":48})
     
     # Create the mappers between model requirement and IC variables

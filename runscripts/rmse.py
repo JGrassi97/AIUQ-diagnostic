@@ -88,7 +88,6 @@ def main() -> None:
         truth = truth.isel(level=~truth["level"].to_index().duplicated())
         truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
 
-
         # Compute incrementer
         s_err = np.square(model - truth)
 

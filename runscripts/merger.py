@@ -29,29 +29,31 @@ def main() -> None:
         _END_TIME       = config.get("END_TIME", "")
         _OUT_VARS       = config.get("OUT_VARS", [])
         _OUTPUT_PATH        = config.get("OUTPUT_PATH", "")
-        _RNG_KEY            = config.get("RNG_KEY", "")
+        #_RNG_KEY            = config.get("RNG_KEY", "")
+        _MEMBERS             = config.get("MEMBERS", "")
 
         output_vars = normalize_out_vars(_OUT_VARS)
 
         dat_list = []
-        for var in output_vars:
+        for key in _MEMBERS.split():
+                for var in output_vars:
 
-                OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
-                _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
-                _COUNTER_FILE = f"{_OUTPUT_PATH}/rmse-counter.nc"
+                        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(key)}"
+                        _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{key}-squared_error.nc"
+                        _COUNTER_FILE = f"{_OUTPUT_PATH}/rmse-counter.nc"
 
-                rmse = xr.open_dataset(_INCRE_FILE)[var]
+                        rmse = xr.open_dataset(_INCRE_FILE)[var]
 
-                # Add member dimension
-                rmse = rmse.expand_dims(member=[str(_RNG_KEY)])
+                        # Add member dimension
+                        rmse = rmse.expand_dims(member=[str(key)])
 
-                # Change dat time with increasing number of days
-                lead_time = np.arange(0, len(rmse.time.dt.day))
+                        # Change dat time with increasing number of days
+                        lead_time = np.arange(0, len(rmse.time.dt.day))
 
-                rmse['time'] = lead_time
+                        rmse['time'] = lead_time
 
-                dat_list.append(rmse)
-                os.remove(_INCRE_FILE)
+                        dat_list.append(rmse)
+                        #os.remove(_INCRE_FILE)
 
         dat_list = xr.merge(dat_list)
 

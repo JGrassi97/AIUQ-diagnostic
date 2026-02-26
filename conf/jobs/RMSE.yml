@@ -31,7 +31,7 @@ JOBS:
     CHECK: on_submission
     FILE: templates/merger.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
-    RUNNING: CHUNK
+    RUNNING: DATE
     DEPENDENCIES: RMSE
     NODES: 1
     PROCESSORS: 20

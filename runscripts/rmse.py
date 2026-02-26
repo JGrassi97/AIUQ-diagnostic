@@ -100,7 +100,10 @@ def main() -> None:
 
         model = model.rename({'time':'dummy'}).drop_vars(['dummy']).rename({'valid_time': 'time'})[var]
 
-        truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
+        try:
+            truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
+        except:
+            pass
 
         # Compute incrementer
         s_err = np.square(model - truth)

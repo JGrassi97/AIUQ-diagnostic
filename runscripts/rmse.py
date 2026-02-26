@@ -98,9 +98,9 @@ def main() -> None:
     model.close()
 
 
-    shutil.rmtree(                          # Remove truth
-        _TRUTH_PATH,
-        ignore_errors=True)
+    # shutil.rmtree(                          # Remove truth
+    #     _TRUTH_PATH,
+    #     ignore_errors=True)
     
     os.remove(_MODEL_FILE)                    # Remove model output
     

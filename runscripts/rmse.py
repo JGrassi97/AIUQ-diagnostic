@@ -56,32 +56,13 @@ def main() -> None:
 
     output_vars = normalize_out_vars(_OUT_VARS)
 
-    # IC settings
-    ic_card = read_ic_card(_HPCROOTDIR, _IC)
-    standard_dict = read_std_version(_HPCROOTDIR, _STD_VERSION)
 
-    # Create the mappers between model requirement and IC variables
-    ic_names, rename_dict, long_names_dict, units_dict, missing_vars = define_ics_mappers(
-        ic_card['variables'], 
-        standard_dict['variables']['data']
-        )
-    
-    output_vars = normalize_out_vars(_OUT_VARS)
-    rename_dict = {k : v for k, v in rename_dict.items() if k in output_vars}
-    long_names_dict = {k : v for k, v in long_names_dict.items() if k in list(rename_dict.values())}
-    units_dict = {k : v for k, v in units_dict.items() if k in list(rename_dict.values())}
-
+    OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
     # To add in config
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
-    truth = xr.open_zarr(_TRUTH_PATH, chunks={"time":1})
-    # Set longitude from 0 to 360 to -180 to 180 and sort by longitude
-    truth['longitude'] = (truth['longitude'] + 180) % 360 - 180
-    truth = truth.sortby(truth.longitude)
-    truth = truth.isel(level=~truth["level"].to_index().duplicated())
 
     for var in output_vars:
 
-        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
         _MODEL_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
         _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
 
@@ -100,10 +81,13 @@ def main() -> None:
 
         model = model.rename({'time':'dummy'}).drop_vars(['dummy']).rename({'valid_time': 'time'})[var]
 
-        try:
-            truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
-        except:
-            pass
+        truth = xr.open_zarr(_TRUTH_PATH, chunks={"time":1})
+        # Set longitude from 0 to 360 to -180 to 180 and sort by longitude
+        truth['longitude'] = (truth['longitude'] + 180) % 360 - 180
+        truth = truth.sortby(truth.longitude)
+        truth = truth.isel(level=~truth["level"].to_index().duplicated())
+        truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
+
 
         # Compute incrementer
         s_err = np.square(model - truth)

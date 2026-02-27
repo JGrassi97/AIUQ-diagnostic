@@ -105,9 +105,6 @@ def main() -> None:
 
         # Save incrementers
         ds_out = xr.merge([err, abs_err, s_err, c_err, q_err, y, yhat, y2, yhat2, yyhat, n])
-
-        # Add member dimension
-        ds_out = ds_out.expand_dims(member=[str(_RNG_KEY)])
         
         ds_out.to_netcdf(_INCRE_FILE)
 

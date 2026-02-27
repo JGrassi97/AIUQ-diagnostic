@@ -130,6 +130,9 @@ def main() -> None:
 
             ds = xr.open_dataset(incre_file)
 
+            # aggiungi dimensione member
+            ds = ds.expand_dims(member=[str(key)])
+
             # se vuoi lead_time al posto di time (opzionale)
             ds = _to_lead_time(ds)
 

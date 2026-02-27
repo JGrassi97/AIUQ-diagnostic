@@ -88,11 +88,25 @@ def main() -> None:
         truth = truth.isel(level=~truth["level"].to_index().duplicated())
         truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
 
-        # Compute incrementer
-        s_err = np.square(model - truth)
+        # Compute incrementers
+        err     = (model - truth).rename({var: f"{var}_err"})                   # For the ME
+        abs_err = np.abs(err).rename({f"{var}_err": f"{var}_absolute_error"})   # For the MAE
+        s_err   = (err ** 2).rename({f"{var}_err": f"{var}_squared_error"})     # For the RMSE
+        c_err = (err ** 3).rename({f"{var}_err": f"{var}_cubed_error"})         # 
+        q_err = (err ** 4).rename({f"{var}_err": f"{var}_quartic_error"})       #
+        y     = truth.rename({var: f"{var}_truth"})                             #
+        yhat  = model.rename({var: f"{var}_model"})                             #
+        y2    = (y ** 2).rename({f"{var}_truth": f"{var}_truth_sq"})            #   
+        yhat2 = (yhat ** 2).rename({f"{var}_model": f"{var}_model_sq"})         #
+        yyhat = (y * yhat).rename({f"{var}_truth": f"{var}_truth_x_model"})     #
 
-        # Save incrementer
-        s_err.to_netcdf(_INCRE_FILE)
+        # Counter
+        n = xr.ones_like(err).rename({f"{var}_err": f"{var}_n"})
+
+        # Save incrementers
+        ds_out = xr.merge([err, abs_err, s_err, c_err, q_err, y, yhat, y2, yhat2, yyhat, n])
+        ds_out.to_netcdf(_INCRE_FILE)
+
         model.close()
         os.remove(_MODEL_FILE)                    # Remove model output
 

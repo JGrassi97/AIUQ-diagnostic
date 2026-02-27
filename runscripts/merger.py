@@ -115,8 +115,7 @@ def main() -> None:
         ds_members = []
         for key in _MEMBERS.split():
             base = f"{_OUTPUT_PATH}/{var}/{str(key)}"
-            incre_file = f"{base}/aifs-{_START_TIME}-{_END_TIME}-{key}-squared_error.nc"  # (nome tuo)
-            # ^ Consiglio: rinominalo in "...-incrementers.nc" per chiarezza
+            incre_file = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-incrementers.nc"  # (nome tuo)
 
             if not os.path.exists(incre_file):
                 continue

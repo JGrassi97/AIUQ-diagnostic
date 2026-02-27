@@ -63,8 +63,8 @@ def main() -> None:
 
     for var in output_vars:
         OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/{str(_RNG_KEY)}"
-        _MODEL_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
-        _INCRE_FILE = f"{OUTPUT_BASE_PATH}/aifs-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-squared_error.nc"
+        _MODEL_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-{var}.nc"
+        _INCRE_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-{_RNG_KEY}-incrementers.nc"
 
         model = xr.open_dataset(_MODEL_FILE)
 
@@ -113,10 +113,6 @@ def main() -> None:
     
     truth.close()
 
-    # shutil.rmtree(                          # Remove truth
-    #     _TRUTH_PATH,
-    #     ignore_errors=True)
-    
     
     
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ JOBS:
   RMSE:
     CHECK: on_submission
     FILE: templates/rmse.sh,templates/config.yml
-    PLATFORM: "MARENOSTRUM5ACC"
+    PLATFORM: "MARENOSTRUM5-LOGIN"
     RUNNING: CHUNK
     DEPENDENCIES: RESAMPLE_GROUND_TRUTH, POSTPROCESS
     NODES: 1
@@ -30,7 +30,7 @@ JOBS:
   MERGER:
     CHECK: on_submission
     FILE: templates/merger.sh,templates/config.yml
-    PLATFORM: "MARENOSTRUM5ACC"
+    PLATFORM: "MARENOSTRUM5-LOGIN-NOOVERLAP"
     RUNNING: DATE
     DEPENDENCIES: RMSE
     NODES: 1

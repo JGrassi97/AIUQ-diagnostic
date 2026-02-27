@@ -148,7 +148,6 @@ def main() -> None:
             ds_batch.to_netcdf(counter_file)
         else:
             ds_counter = xr.open_dataset(counter_file)
-            # allineamento coords per sicurezza
             ds_counter, ds_batch = xr.align(ds_counter, ds_batch, join="outer")
             ds_new = ds_counter.fillna(0) + ds_batch.fillna(0)
             ds_counter.close()

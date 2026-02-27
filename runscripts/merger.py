@@ -130,9 +130,6 @@ def main() -> None:
 
             ds = xr.open_dataset(incre_file)
 
-            # aggiungi dimensione member
-            ds = ds.expand_dims(member=[str(key)])
-
             # se vuoi lead_time al posto di time (opzionale)
             ds = _to_lead_time(ds)
 
@@ -147,16 +144,15 @@ def main() -> None:
         # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)
         ds_all = xr.concat(ds_members, dim="member")
 
-        # somma su member per aggiornare il counter
-        ds_batch = ds_all.sum(dim="member")
+
 
         # aggiorna counter su disco
         if not os.path.exists(counter_file):
-            safe_write_netcdf(ds_batch, counter_file)
+            safe_write_netcdf(ds_all, counter_file)
         else:
             ds_counter = xr.open_dataset(counter_file)
-            ds_counter, ds_batch = xr.align(ds_counter, ds_batch, join="outer")
-            ds_new = ds_counter.fillna(0) + ds_batch.fillna(0)
+            ds_counter, ds_all = xr.align(ds_counter, ds_all, join="outer")
+            ds_new = ds_counter.fillna(0) + ds_all.fillna(0)
             ds_counter.close()
 
             safe_write_netcdf(ds_new, counter_file)

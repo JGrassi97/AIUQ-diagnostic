@@ -76,6 +76,18 @@ def main() -> None:
         model = _preprocess_one_file(model)
         model = _preprocess_longitude(model)
 
+        target = {}
+        if 'temperature' in model.data_vars:
+            target['temperature'] = 't'
+        if 'u_component_of_wind' in model.data_vars:
+            target['u_component_of_wind'] = 'u'
+        if 'v_component_of_wind' in model.data_vars:
+            target['v_component_of_wind'] = 'v'
+        if 'geopotential' in model.data_vars:
+            target['geopotential'] = 'z'
+
+        model = model.rename(target)
+
         lead_time = model['valid_time'] - model['time']
         lead_time = lead_time.astype('timedelta64[h]') / np.timedelta64(1, 'h')
 

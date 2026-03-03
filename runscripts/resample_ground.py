@@ -51,7 +51,7 @@ def main() -> None:
     
     # Temporary fix for naming inconsistencies
     #output_vars = normalize_out_vars(_OUT_VARS)
-    output_vars = ['temperature', 'u_component_of_wind', 'v_component_of_wind']
+    output_vars = ['temperature', 'u_component_of_wind', 'v_component_of_wind', 'geopotential']
     rename_dict = {k : v for k, v in rename_dict.items() if k in output_vars}
     long_names_dict = {k : v for k, v in long_names_dict.items() if k in list(rename_dict.values())}
     units_dict = {k : v for k, v in units_dict.items() if k in list(rename_dict.values())}

@@ -21,6 +21,7 @@ fi
 
 singularity exec --nv \
     --bind $HPCROOTDIR \
+    --bind $OUTPUT_PATH \
     --env HPCROOTDIR=$HPCROOTDIR \
     --env configfile=$configfile \
     ${SIF_PATH} \

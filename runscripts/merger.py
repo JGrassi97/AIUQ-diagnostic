@@ -5,6 +5,7 @@
 # Built-in/Generics
 import os
 import uuid
+import shutil
 
 # Third party
 import numpy as np
@@ -41,8 +42,11 @@ def main() -> None:
     _OUT_VARS     = config.get("OUT_VARS", [])
     _OUTPUT_PATH  = config.get("OUTPUT_PATH", "")
     _MEMBERS      = config.get("MEMBERS", "")
+    _HPCROOTDIR     = config.get("HPCROOTDIR", "")
 
     output_vars = normalize_out_vars(_OUT_VARS)
+
+    _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
     # Un counter per var (molto più semplice e meno rischi di collisioni tra var)
     # Se vuoi un unico file per tutte le var, si può fare, ma serve nomi univoci.
@@ -76,8 +80,6 @@ def main() -> None:
         # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)
         ds_all = xr.concat(ds_members, dim="member")
 
-
-
         # aggiorna counter su disco
         if not os.path.exists(counter_file):
             safe_write_netcdf(ds_all, counter_file)
@@ -88,6 +90,9 @@ def main() -> None:
             ds_counter.close()
 
             safe_write_netcdf(ds_new, counter_file)
+
+    # Remove truth
+    shutil.rmtree(_TRUTH_PATH, ignore_errors=True)
 
 
 if __name__ == "__main__":

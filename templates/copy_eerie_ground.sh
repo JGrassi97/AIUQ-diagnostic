@@ -22,6 +22,14 @@ DST_HOST="${HPCUSER}@${HPCHOST}"
 SRC_BASE="${SRC_BASE%/}"
 
 # -----------------------
+# SSH reuse (MUCH faster): one master connection reused by ssh/scp
+# -----------------------
+CTL_DIR="${ROOTDIR}/tmp"
+mkdir -p "$CTL_DIR"
+CTL_PATH="${CTL_DIR}/sshctl_%r@%h:%p"
+SSHOPTS="-o ControlMaster=auto -o ControlPersist=15m -o ControlPath=$CTL_PATH -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o BatchMode=yes"
+
+# -----------------------
 # Helpers (must be before use)
 # -----------------------
 run() {
@@ -34,7 +42,8 @@ run() {
 
 copy_file() {
   local src="$1" dst="$2"
-  run "scp -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
+  # Reuse SSH connection for speed
+  run "scp $SSHOPTS -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
 }
 
 # -----------------------
@@ -90,6 +99,21 @@ if [ "${#VARS[@]}" -eq 0 ]; then
 fi
 
 # -----------------------
+# Warm up master connection(s) (optional but helps avoid first-copy latency)
+# -----------------------
+run "ssh $SSHOPTS \"$DST_HOST\" true"
+
+# -----------------------
+# Create destination directories ONCE (avoid per-file ssh mkdir)
+# -----------------------
+for var in "${VARS[@]}"; do
+  for mem in "${MEMBERS[@]}"; do
+    dst_dir="${DEST_BASE}/${var}/${mem}"
+    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
+  done
+done
+
+# -----------------------
 # Iterate days: START_TIME/END_TIME are yyyy-mm-dd; produce yyyymmdd
 # (No `date -d`, portable across macOS/Linux)
 # -----------------------
@@ -99,8 +123,6 @@ while IFS= read -r ymd; do
       src_file="${SRC_BASE}/${var}/${mem}/${var}_${ymd}.nc"
       dst_dir="${DEST_BASE}/${var}/${mem}"
       dst_file="${dst_dir}/${var}_${ymd}.nc"
-
-      run "ssh \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
       copy_file "$src_file" "$dst_file"
     done
   done

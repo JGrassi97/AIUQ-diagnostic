@@ -44,6 +44,17 @@ PY
 DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3 4 5)
 
+# Build VARS array from JSON (bash 3.2 compatible: no mapfile)
+VARS=()
+while IFS= read -r v; do
+  [ -n "$v" ] && VARS+=("$v")
+done < <(python3 - <<PY
+import json
+for x in json.loads('''$OUT_VARS_JSON'''):
+    print(x)
+PY
+)
+
 python3 - "$START_TIME" "$END_TIME" <<'PY' | while IFS= read -r ymd; do
 import sys
 from datetime import date, timedelta

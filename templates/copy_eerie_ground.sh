@@ -108,7 +108,7 @@ run "ssh $SSHOPTS \"$DST_HOST\" true"
 # -----------------------
 for var in "${VARS[@]}"; do
   for mem in "${MEMBERS[@]}"; do
-    dst_dir="${DEST_BASE}/${var}/${mem}"
+    dst_dir="${DEST_BASE}/${START_TIME}/${var}/${mem}"
     run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
   done
 done
@@ -121,7 +121,7 @@ while IFS= read -r ymd; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do
       src_file="${SRC_BASE}/${var}/${mem}/${var}_${ymd}.nc"
-      dst_dir="${DEST_BASE}/${var}/${mem}"
+      dst_dir="${DEST_BASE}/${START_TIME}/${var}/${mem}"
       dst_file="${dst_dir}/${var}_${ymd}.nc"
       copy_file "$src_file" "$dst_file"
     done

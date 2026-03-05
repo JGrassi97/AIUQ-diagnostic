@@ -40,7 +40,7 @@ print(ini, start, end, json.dumps(vars_list))
 PY
 )"
 
-DEST_BASE="${INI_DATA_PATH%/}/temp"
+DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3 4 5)
 
 start_epoch=$(date -d "$START_TIME" +%s)

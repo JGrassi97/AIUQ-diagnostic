@@ -18,6 +18,25 @@ DST_HOST="bsc850074@glogin2.bsc.es"
 
 SRC_BASE="${SRC_BASE%/}"
 
+# -----------------------
+# Helpers (must be before use)
+# -----------------------
+run() {
+  if [ "${DRY_RUN}" = "1" ]; then
+    echo "$@"
+  else
+    eval "$@"
+  fi
+}
+
+copy_file() {
+  local src="$1" dst="$2"
+  run "scp -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
+}
+
+# -----------------------
+# Read config (YAML) -> bash vars
+# -----------------------
 read -r INI_DATA_PATH START_TIME END_TIME OUT_VARS_JSON <<<"$(
 python3 - "$CONFIGFILE" <<'PY'
 import sys, json, re, yaml
@@ -41,10 +60,17 @@ print(ini, start, end, json.dumps(vars_list))
 PY
 )"
 
+# Basic sanity (avoid -u explosions later)
+: "${START_TIME:?START_TIME empty}"
+: "${END_TIME:?END_TIME empty}"
+: "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
+
 DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3 4 5)
 
-# Build VARS array from JSON (bash 3.2 compatible: no mapfile)
+# -----------------------
+# Build VARS array from JSON (bash 3.2 compatible)
+# -----------------------
 VARS=()
 while IFS= read -r v; do
   [ -n "$v" ] && VARS+=("$v")
@@ -55,7 +81,27 @@ for x in json.loads('''$OUT_VARS_JSON'''):
 PY
 )
 
-python3 - "$START_TIME" "$END_TIME" <<'PY' | while IFS= read -r ymd; do
+if [ "${#VARS[@]}" -eq 0 ]; then
+  echo "ERROR: VARS array is empty (OUT_VARS_JSON=$OUT_VARS_JSON)" >&2
+  exit 1
+fi
+
+# -----------------------
+# Iterate days: START_TIME/END_TIME are yyyy-mm-dd; produce yyyymmdd
+# (No `date -d`, portable across macOS/Linux)
+# -----------------------
+while IFS= read -r ymd; do
+  for var in "${VARS[@]}"; do
+    for mem in "${MEMBERS[@]}"; do
+      src_file="${SRC_BASE}/${var}/${mem}/${ymd}.nc"
+      dst_dir="${DEST_BASE}/${var}/${mem}"
+      dst_file="${dst_dir}/${ymd}.nc"
+
+      run "ssh \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
+      copy_file "$src_file" "$dst_file"
+    done
+  done
+done < <(python3 - "$START_TIME" "$END_TIME" <<'PY'
 import sys
 from datetime import date, timedelta
 
@@ -74,16 +120,4 @@ while cur <= end:
     print(cur.strftime("%Y%m%d"))
     cur += one
 PY
-
-  for var in "${VARS[@]}"; do
-    for mem in "${MEMBERS[@]}"; do
-      src_file="${SRC_BASE}/${var}/${mem}/${ymd}.nc"
-      dst_dir="${DEST_BASE}/${var}/${mem}"
-      dst_file="${dst_dir}/${ymd}.nc"
-
-      run "ssh \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
-      copy_file "$src_file" "$dst_file"
-    done
-  done
-
-done
+)

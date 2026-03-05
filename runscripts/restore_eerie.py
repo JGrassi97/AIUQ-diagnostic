@@ -50,12 +50,14 @@ def main() -> None:
     _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', 'temp' , _START_TIME)
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
+    data = []
     for var in output_vars:
         for member in ['1','2','3']:
             path = f'{_TRUTH_PATH_TEMP}/{var}/{member}'
 
             files = os.listdir(path)
             files = [f for f in files if f.endswith('.nc')]
+            files = [os.path.join(path, f) for f in files]
 
             dat = xr.open_mfdataset(files)
             dat = dat.sel(isobaricInhPa=desired_levels)

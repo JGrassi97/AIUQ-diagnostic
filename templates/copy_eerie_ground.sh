@@ -44,7 +44,7 @@ PY
 DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3 4 5)
 
-mapfile -t YMDS < <(python3 - <<'PY'
+python3 - "$START_TIME" "$END_TIME" <<'PY' | while IFS= read -r ymd; do
 import sys
 from datetime import date, timedelta
 
@@ -63,9 +63,7 @@ while cur <= end:
     print(cur.strftime("%Y%m%d"))
     cur += one
 PY
-"$START_TIME" "$END_TIME")
 
-for ymd in "${YMDS[@]}"; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do
       src_file="${SRC_BASE}/${var}/${mem}/${ymd}.nc"
@@ -76,4 +74,5 @@ for ymd in "${YMDS[@]}"; do
       copy_file "$src_file" "$dst_file"
     done
   done
+
 done

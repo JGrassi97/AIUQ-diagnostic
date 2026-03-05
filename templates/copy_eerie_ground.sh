@@ -4,7 +4,6 @@ set -euo pipefail
 HPCROOTDIR=%HPCROOTDIR%
 EXPID=%DEFAULT.EXPID%
 JOBNAME=%JOBNAME%
-PLATFORM_NAME=%PLATFORM.NAME%
 
 JOBNAME_WITHOUT_EXPID=$(echo "${JOBNAME}" | sed 's/^[^_]*_//')
 LOGS_DIR="${HPCROOTDIR}/LOG_${EXPID}"
@@ -12,20 +11,12 @@ CONFIGFILE="${LOGS_DIR}/config_${JOBNAME_WITHOUT_EXPID}"
 
 DRY_RUN="${DRY_RUN:-0}"
 
-# --- hardcoded platforms (edit/add yours) ---
-case "$PLATFORM_NAME" in
-  platformA)
-    SRC_HOST="jgrassi@mafalda.polito.it"
-    SRC_BASE="/data/users/jgrassi/eerie/amip/day"
-    ;;
-  platformB)
-    SRC_HOST="bsc850074@glogin2.bsc.es"
-    SRC_BASE="/gpfs/archive/model_data"
-    ;;
-esac
+SRC_HOST="jgrassi@mafalda.polito.it"
+SRC_BASE="/data/users/jgrassi/eerie/amip/day"
+DST_HOST="bsc850074@glogin2.bsc.es"
+
 SRC_BASE="${SRC_BASE%/}"
 
-# --- read YAML (INI_DATA_PATH, START_TIME, END_TIME, OUT_VARS) ---
 read -r INI_DATA_PATH START_TIME END_TIME OUT_VARS_JSON <<<"$(
 python3 - "$CONFIGFILE" <<'PY'
 import sys, json, re, yaml
@@ -65,11 +56,7 @@ run() { [[ "$DRY_RUN" == "1" ]] && echo "$*" || eval "$@"; }
 
 copy_file() {
   local src="$1" dst="$2"
-  if [[ "$SRC_HOST" == "local" ]]; then
-    run "cp -p \"$src\" \"$dst\""
-  else
-    run "scp -p \"$SRC_HOST\":\"$src\" \"$dst\""
-  fi
+  run "scp -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
 }
 
 day_epoch="$start_epoch"
@@ -84,7 +71,7 @@ while (( day_epoch <= end_epoch )); do
       dst_dir="${DEST_BASE}/${var}/${mem}"
       dst_file="${dst_dir}/${ymd}.nc"
 
-      run "mkdir -p \"$dst_dir\""
+      run "ssh \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
       copy_file "$src_file" "$dst_file"
     done
   done

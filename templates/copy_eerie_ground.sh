@@ -12,9 +12,12 @@ CONFIGFILE="${LOGS_DIR}/config_${JOBNAME_WITHOUT_EXPID}"
 
 DRY_RUN="${DRY_RUN:-0}"
 
-SRC_HOST="jgrassi@mafalda.polito.it"
-SRC_BASE="/data/users/jgrassi/eerie/amip/day"
-DST_HOST="bsc850074@glogin2.bsc.es"
+HPCUSER=%HPCUSER%
+HPCHOST=%HPCHOST%
+
+SRC_HOST=%EERIE.HOST%
+SRC_BASE=%EERIE.PATH%
+DST_HOST="${HPCUSER}@${HPCHOST}"
 
 SRC_BASE="${SRC_BASE%/}"
 
@@ -66,7 +69,7 @@ PY
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
 
 DEST_BASE="${HPCROOTDIR}/truth/temp"
-MEMBERS=(1 2 3 4)
+MEMBERS=(1 2 3)
 
 # -----------------------
 # Build VARS array from JSON (bash 3.2 compatible)

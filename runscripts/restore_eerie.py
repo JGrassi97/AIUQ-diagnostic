@@ -47,7 +47,7 @@ def main() -> None:
     output_vars = normalize_out_vars(_OUT_VARS)
 
     # To add in config
-    _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME)
+    _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', 'temp' , _START_TIME)
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
     for var in output_vars:

@@ -93,9 +93,9 @@ fi
 while IFS= read -r ymd; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do
-      src_file="${SRC_BASE}/${var}/${mem}/${ymd}.nc"
+      src_file="${SRC_BASE}/${var}/${mem}/${var}_${ymd}.nc"
       dst_dir="${DEST_BASE}/${var}/${mem}"
-      dst_file="${dst_dir}/${ymd}.nc"
+      dst_file="${dst_dir}/${var}_${ymd}.nc"
 
       run "ssh \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
       copy_file "$src_file" "$dst_file"

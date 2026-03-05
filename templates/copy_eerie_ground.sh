@@ -44,28 +44,28 @@ PY
 DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3 4 5)
 
-start_epoch=$(date -d "$START_TIME" +%s)
-end_epoch=$(date -d "$END_TIME" +%s)
+mapfile -t YMDS < <(python3 - <<'PY'
+import sys
+from datetime import date, timedelta
 
-mapfile -t VARS < <(python3 - <<PY
-import json
-print("\n".join(json.loads('''$OUT_VARS_JSON''')))
+start_s = sys.argv[1]
+end_s   = sys.argv[2]
+
+y, m, d = map(int, start_s.split("-"))
+start = date(y, m, d)
+
+y, m, d = map(int, end_s.split("-"))
+end = date(y, m, d)
+
+cur = start
+one = timedelta(days=1)
+while cur <= end:
+    print(cur.strftime("%Y%m%d"))
+    cur += one
 PY
-)
+"$START_TIME" "$END_TIME")
 
-run() { [[ "$DRY_RUN" == "1" ]] && echo "$*" || eval "$@"; }
-
-copy_file() {
-  local src="$1" dst="$2"
-  run "scp -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
-}
-
-day_epoch="$start_epoch"
-one_day=$((24*3600))
-
-while (( day_epoch <= end_epoch )); do
-  ymd=$(date -u -d "@$day_epoch" +%Y%m%d)
-
+for ymd in "${YMDS[@]}"; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do
       src_file="${SRC_BASE}/${var}/${mem}/${ymd}.nc"
@@ -76,6 +76,4 @@ while (( day_epoch <= end_epoch )); do
       copy_file "$src_file" "$dst_file"
     done
   done
-
-  day_epoch=$((day_epoch + one_day))
 done

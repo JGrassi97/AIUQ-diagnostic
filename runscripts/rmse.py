@@ -94,6 +94,10 @@ def main() -> None:
         model = model.rename({'time':'dummy'}).drop_vars(['dummy']).rename({'valid_time': 'time'})[var]
 
         truth = xr.open_zarr(_TRUTH_PATH, chunks={"time":1})[var]
+
+        # If truth has a member dimension, we need to do member average
+        if 'member' in truth.dims:
+            truth = truth.mean(dim='member')
         # Set longitude from 0 to 360 to -180 to 180 and sort by longitude
         truth['longitude'] = (truth['longitude'] + 180) % 360 - 180
         truth = truth.sortby(truth.longitude)

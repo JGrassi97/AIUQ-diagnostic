@@ -66,7 +66,7 @@ PY
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
 
 DEST_BASE="${HPCROOTDIR}/truth/temp"
-MEMBERS=(1 2 3 4 5)
+MEMBERS=(1 2 3 4)
 
 # -----------------------
 # Build VARS array from JSON (bash 3.2 compatible)

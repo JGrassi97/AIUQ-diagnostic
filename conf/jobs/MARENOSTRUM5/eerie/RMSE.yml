@@ -3,7 +3,7 @@ JOBS:
   GET_GROUND_TRUTH:
     CHECK: on_submission
     FILE: templates/copy_eerie_ground.sh,templates/config.yml
-    PLATFORM: "MARENOSTRUM5-LOGIN-NOOVERLAP-2"
+    PLATFORM: local
     RUNNING: DATE
     DEPENDENCIES: SYNCHRONIZE
 

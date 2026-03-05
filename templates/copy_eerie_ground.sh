@@ -22,7 +22,7 @@ DST_HOST="${HPCUSER}@${HPCHOST}"
 SRC_BASE="${SRC_BASE%/}"
 
 # -----------------------
-# SSH reuse (MUCH faster): one master connection reused by ssh/scp
+# SSH reuse (faster for remote)
 # -----------------------
 CTL_DIR="${ROOTDIR}/tmp"
 mkdir -p "$CTL_DIR"
@@ -30,7 +30,7 @@ CTL_PATH="${CTL_DIR}/sshctl_%r@%h:%p"
 SSHOPTS="-o ControlMaster=auto -o ControlPersist=15m -o ControlPath=$CTL_PATH -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o BatchMode=yes"
 
 # -----------------------
-# Helpers (must be before use)
+# Helpers
 # -----------------------
 run() {
   if [ "${DRY_RUN}" = "1" ]; then
@@ -40,10 +40,38 @@ run() {
   fi
 }
 
+# Decide if source and destination are the same host
+# (string-equality is enough in your templated setup)
+SAME_HOST=0
+if [ "$SRC_HOST" = "$DST_HOST" ]; then
+  SAME_HOST=1
+fi
+
 copy_file() {
   local src="$1" dst="$2"
-  # Reuse SSH connection for speed
-  run "scp $SSHOPTS -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
+
+  if [ "$SAME_HOST" -eq 1 ]; then
+    # Local copy: much faster than scp
+    # Ensure parent exists (local)
+    local dstdir
+    dstdir="$(dirname "$dst")"
+    run "mkdir -p \"$dstdir\""
+    run "cp -p \"$src\" \"$dst\""
+    # Alternative (often even better for many files): rsync
+    # run "rsync -a --inplace \"$src\" \"$dst\""
+  else
+    # Remote copy
+    run "scp $SSHOPTS -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
+  fi
+}
+
+mk_dst_dir() {
+  local d="$1"
+  if [ "$SAME_HOST" -eq 1 ]; then
+    run "mkdir -p \"$d\""
+  else
+    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$d'\""
+  fi
 }
 
 # -----------------------
@@ -72,7 +100,6 @@ print(ini, start, end, json.dumps(vars_list))
 PY
 )"
 
-# Basic sanity (avoid -u explosions later)
 : "${START_TIME:?START_TIME empty}"
 : "${END_TIME:?END_TIME empty}"
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
@@ -80,9 +107,7 @@ PY
 DEST_BASE="${HPCROOTDIR}/truth/temp"
 MEMBERS=(1 2 3)
 
-# -----------------------
-# Build VARS array from JSON (bash 3.2 compatible)
-# -----------------------
+# Build VARS array (bash 3.2 compatible)
 VARS=()
 while IFS= read -r v; do
   [ -n "$v" ] && VARS+=("$v")
@@ -98,25 +123,20 @@ if [ "${#VARS[@]}" -eq 0 ]; then
   exit 1
 fi
 
-# -----------------------
-# Warm up master connection(s) (optional but helps avoid first-copy latency)
-# -----------------------
-run "ssh $SSHOPTS \"$DST_HOST\" true"
+# Warm up remote connection only if needed
+if [ "$SAME_HOST" -eq 0 ]; then
+  run "ssh $SSHOPTS \"$DST_HOST\" true"
+fi
 
-# -----------------------
-# Create destination directories ONCE (avoid per-file ssh mkdir)
-# -----------------------
+# Create destination directories ONCE
 for var in "${VARS[@]}"; do
   for mem in "${MEMBERS[@]}"; do
     dst_dir="${DEST_BASE}/${START_TIME}/${var}/${mem}"
-    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$dst_dir'\""
+    mk_dst_dir "$dst_dir"
   done
 done
 
-# -----------------------
-# Iterate days: START_TIME/END_TIME are yyyy-mm-dd; produce yyyymmdd
-# (No `date -d`, portable across macOS/Linux)
-# -----------------------
+# Iterate days (portable)
 while IFS= read -r ymd; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do

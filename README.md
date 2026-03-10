@@ -13,3 +13,9 @@ autosubmit expid \
   --git_repo https://github.com/JGrassi97/AIUQ-diagnostic.git \
   --git_branch main
 ```
+
+
+### Update the engine:
+```
+git submodule update --remote --merge  
+```

@@ -25,4 +25,4 @@ singularity exec --nv \
     --env HPCROOTDIR=$HPCROOTDIR \
     --env configfile=$configfile \
     ${SIF_PATH} \
-    python3 $HPCROOTDIR/runscripts/rmse.py -c $configfile
+    python3 $HPCROOTDIR/runscripts/deterministic.py -c $configfile

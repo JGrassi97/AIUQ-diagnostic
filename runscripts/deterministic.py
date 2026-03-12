@@ -105,19 +105,19 @@ def main() -> None:
             truth_sel = truth.sel(member=member)
 
             # Compute incrementers
-            err     = (model - truth_sel).rename(f"{var}_err").expand_dims(member=[new_name])            # For the ME
-            abs_err = np.abs(err).rename(f"{var}_absolute_error").expand_dims(member=[new_name])         # For the MAE
-            s_err   = (err ** 2).rename(f"{var}_squared_error".expand_dims(member=[new_name])  )         # For the RMSE
-            c_err = (err ** 3).rename(f"{var}_cubed_error").expand_dims(member=[new_name])               # 
-            q_err = (err ** 4).rename(f"{var}_quartic_error").expand_dims(member=[new_name])             #
-            y     = truth_sel.rename(f"{var}_truth").expand_dims(member=[new_name])                      #
-            yhat  = model.rename(f"{var}_model").expand_dims(member=[new_name])                          #
-            y2    = (y ** 2).rename(f"{var}_truth_sq").expand_dims(member=[new_name])                    #   
-            yhat2 = (yhat ** 2).rename(f"{var}_model_sq").expand_dims(member=[new_name])                 #
-            yyhat = (y * yhat).rename(f"{var}_truth_x_model").expand_dims(member=[new_name])             #
+            err     = (model - truth_sel).rename(f"{var}_err").assign_coords(member=[new_name])            # For the ME
+            abs_err = np.abs(err).rename(f"{var}_absolute_error").assign_coords(member=[new_name])         # For the MAE
+            s_err   = (err ** 2).rename(f"{var}_squared_error".assign_coords(member=[new_name])  )         # For the RMSE
+            c_err = (err ** 3).rename(f"{var}_cubed_error").assign_coords(member=[new_name])               # 
+            q_err = (err ** 4).rename(f"{var}_quartic_error").assign_coords(member=[new_name])             #
+            y     = truth_sel.rename(f"{var}_truth").assign_coords(member=[new_name])                      #
+            yhat  = model.rename(f"{var}_model").assign_coords(member=[new_name])                          #
+            y2    = (y ** 2).rename(f"{var}_truth_sq").assign_coords(member=[new_name])                    #   
+            yhat2 = (yhat ** 2).rename(f"{var}_model_sq").assign_coords(member=[new_name])                 #
+            yyhat = (y * yhat).rename(f"{var}_truth_x_model").assign_coords(member=[new_name])             #
 
             # Counter
-            n = xr.ones_like(err).rename(f"{var}_n").expand_dims(member=[new_name]) 
+            n = xr.ones_like(err).rename(f"{var}_n").assign_coords(member=[new_name]) 
 
             # Save incrementers
             ds = xr.merge([err, abs_err, s_err, c_err, q_err, y, yhat, y2, yhat2, yyhat, n])

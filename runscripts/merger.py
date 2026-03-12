@@ -56,15 +56,15 @@ def main() -> None:
         ds_members = []
         for key in _MEMBERS.split():
             base = f"{_OUTPUT_PATH}/{var}/{str(key)}"
-            incre_file = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-incrementers.nc"  # (nome tuo)
+            incre_file = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-deterministic.nc"  # (nome tuo)
 
             if not os.path.exists(incre_file):
                 continue
 
             ds = xr.open_dataset(incre_file)
 
-            # aggiungi dimensione member
-            ds = ds.expand_dims(member=[str(key)])
+            # # aggiungi dimensione member
+            # ds = ds.expand_dims(member=[str(key)])
 
             # se vuoi lead_time al posto di time (opzionale)
             ds = _to_lead_time(ds)

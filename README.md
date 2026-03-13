@@ -1,14 +1,63 @@
-# AIUQ-diagnostic
+# AIUQ-Diagnostic
 
-AIUQ-diagnostic inheretis the job graph from AIUQ-engine, which allows the inference with AI models. Right now, AIUQ-engine is updated to the version [v0.1.1](https://github.com/JGrassi97/AIUQ/tree/v0.1.1), please refer to the version documentation for a list of models/ics available. The jobs graph is here exapanded allowing to compute diagnostic metrics in streaming, and saving only the counters and final results. In this way, it is possible to evaluate very large ensemble of AI models for long simulations with few archiviation space.
+AIUQ-Diagnostic extends the job graph of **AIUQ-Engine**, enabling the computation of diagnostic metrics on top of AI-based forecast inference workflows.
 
-The metrics described above are computed for each grid point and and lead time, but the initialization time dimension is lost during the aggregation.
+AIUQ-Engine is currently updated to version  
+👉 https://github.com/JGrassi97/AIUQ/tree/v0.1.1  
 
-### Deterministic metrics
-These metrics are computed comparing the single forecast realization with the ground truth. If the ground truth is made of multiple members, these metrics are computed over all the members.
+Please refer to that version’s documentation for the list of available models and initial conditions (ICs).
 
-### Probabilistic metrics
-These metrics require an ensemble of realization to be computed. If the ground truth is made of multiple members, these metrics are computed over all the members.
+---
+
+## Overview
+
+AIUQ-Diagnostic expands the standard inference pipeline by adding **streaming diagnostic metric computation**.
+
+Instead of storing full forecast fields, the system:
+- Computes metrics on-the-fly
+- Stores only incremental counters
+- Saves final aggregated results
+
+This design allows:
+- Evaluation of very large AI model ensembles
+- Long simulation periods
+- Minimal storage requirements
+
+All metrics are computed:
+- At each **grid point**
+- For each **lead time**
+
+Note that, during aggregation, the **initialization time dimension is removed**.
+
+---
+
+#### Deterministic Metrics
+
+Deterministic metrics compare:
+- A **single forecast realization** against the corresponding **ground truth**
+
+If the ground truth contains multiple members, metrics are computed against **all members**
+
+Currently supported metrics:
+- Mean Error (ME)
+- Mean Absolute Error (MAE)
+- Root Mean Square Error (RMSE)
+
+#### Probabilistic Metrics
+
+Probabilistic metrics require:
+- An **ensemble of forecast realizations**
+
+If the ground truth contains multiple members, metrics are computed across **all truth members**
+
+Currently supported metrics:
+- Ensemble spread
+- Continuosly Ranked Probability Score
+
+---
+
+
+## Usage 
 
 ```
 autosubmit expid \

@@ -3,7 +3,7 @@
 """
 
 # Built-in/Generics
-import os 
+import os
 import shutil
 import yaml
 
@@ -20,143 +20,151 @@ from AIUQst_lib.variables import reassign_long_names_units, define_ics_mappers
 
 
 def _preprocess_one_file(ds):
-        """Helper function to correctly set time dimension when ingesting"""
+    """Helper function to correctly set time dimension when ingesting"""
+    vt0 = ds["valid_time"].isel(valid_time=0)
+    ds = ds.expand_dims(time=[vt0.values])
+    return ds
 
-        vt0 = ds["valid_time"].isel(valid_time=0)
-        ds = ds.expand_dims(time=[vt0.values])
-        return ds
 
 def _preprocess_longitude(ds):
-        """ Helper function to preprocess the longitude and set in -180/180"""
+    """Helper function to preprocess longitude and set it in [-180, 180)"""
+    ds["longitude"] = (ds["longitude"] + 180) % 360 - 180
+    ds = ds.sortby(ds.longitude)
+    ds = ds.interpolate_na("longitude", method="nearest", fill_value="extrapolate")
+    return ds
 
-        ds['longitude'] = (ds['longitude'] + 180) % 360 - 180
-        ds = ds.sortby(ds.longitude)
-        ds = ds.interpolate_na('longitude', method='nearest', fill_value='extrapolate')
-        return ds
 
 def crps_ensemble_xarray(da, truth):
     """
-    Compute the CRPS for an ensemble forecast in xarray.
-    Use the rotation invariance formula.
+    Compute the CRPS for an ensemble forecast in xarray using:
+    CRPS = E|X - y| - 0.5 E|X - X'|
     """
-
-    M = da.sizes["member"]
-
-    # ---- term1 = E|X - y|
+    # term1 = E|X - y|
     term1 = np.abs(truth - da).mean(dim="member")
 
-    # ---- term2 = 0.5 * E|X - X'|
+    # term2 = 0.5 * E|X - X'|
     diffs = np.abs(da - da.rename(member="member2"))
     term2 = 0.5 * diffs.mean(dim=("member", "member2"))
 
     return term1 - term2
 
-def main() -> None:
 
+def main() -> None:
     # Read config
     args = parse_arguments()
     config = read_config(args.config)
 
-    _START_TIME     = config.get("START_TIME", "")
-    _END_TIME       = config.get("END_TIME", "")
-    _HPCROOTDIR     = config.get("HPCROOTDIR", "")
-    _OUT_VARS       = config.get("OUT_VARS", [])
-    _OUTPUT_PATH    = config.get("OUTPUT_PATH", "")
-    _MEMBERS        = config.get("MEMBERS", "")
+    _START_TIME = config.get("START_TIME", "")
+    _END_TIME = config.get("END_TIME", "")
+    _HPCROOTDIR = config.get("HPCROOTDIR", "")
+    _OUT_VARS = config.get("OUT_VARS", [])
+    _OUTPUT_PATH = config.get("OUTPUT_PATH", "")
+    _MEMBERS = config.get("MEMBERS", "")
 
     output_vars = normalize_out_vars(_OUT_VARS)
 
-    # To add in config
-    _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
+    # Truth path
+    _TRUTH_PATH = os.path.join(_HPCROOTDIR, "truth", _START_TIME, "truth_store.zarr")
 
     for var in output_vars:
-        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/"
+        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}"
         _INCRE_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-probabilistic.nc"
 
-        # Load all the generated members
+        # Load all generated members
         members = _MEMBERS.split()
 
         models = []
         for member in members:
+            _MODEL_FILE = f"{OUTPUT_BASE_PATH}/{str(member)}/out-{_START_TIME}-{_END_TIME}-{member}-{var}.nc"
+            ds = xr.open_dataset(_MODEL_FILE)
 
-            
-            _MODEL_FILE = f"/{OUTPUT_BASE_PATH}/{str(member)}/out-{_START_TIME}-{_END_TIME}-{member}-{var}.nc"
-            
-            model = xr.open_dataset(_MODEL_FILE)
+            if "lon" in ds.coords:
+                ds = ds.rename({"lon": "longitude"})
+            if "lat" in ds.coords:
+                ds = ds.rename({"lat": "latitude"})
 
-            if 'lon' in model.coords:
-                model = model.rename({'lon': 'longitude'})
-            if 'lat' in model.coords:
-                model = model.rename({'lat': 'latitude'})
-            
-            model = _preprocess_one_file(model)
-            model = _preprocess_longitude(model)
+            ds = _preprocess_one_file(ds)
+            ds = _preprocess_longitude(ds)
 
             target = {}
-            if 'temperature' in model.data_vars:
-                target['temperature'] = 't'
-            if 'u_component_of_wind' in model.data_vars:
-                target['u_component_of_wind'] = 'u'
-            if 'v_component_of_wind' in model.data_vars:
-                target['v_component_of_wind'] = 'v'
-            if 'geopotential' in model.data_vars:
-                target['geopotential'] = 'z'
+            if "temperature" in ds.data_vars:
+                target["temperature"] = "t"
+            if "u_component_of_wind" in ds.data_vars:
+                target["u_component_of_wind"] = "u"
+            if "v_component_of_wind" in ds.data_vars:
+                target["v_component_of_wind"] = "v"
+            if "geopotential" in ds.data_vars:
+                target["geopotential"] = "z"
+            ds = ds.rename(target)
 
-            model = model.rename(target)
+            # Keep valid_time as the forecast time axis, and drop init-time (length=1) to avoid "dummy"
+            da = ds[var]
+            if "time" in da.dims and da.sizes["time"] == 1:
+                da = da.isel(time=0, drop=True)
+            da = da.rename({"valid_time": "time"}).expand_dims(member=[member])
 
-            lead_time = model['valid_time'] - model['time']
-            lead_time = lead_time.astype('timedelta64[h]') / np.timedelta64(1, 'h')
+            models.append(da)
+            ds.close()
 
-            model = model.rename({'time':'dummy'}).drop_vars(['dummy']).rename({'valid_time': 'time'})[var].expand_dims(member=[member])
-            models.append(model)
-        
         model = xr.concat(models, dim="member")
 
-        # Opemn the truth
-        truth = xr.open_zarr(_TRUTH_PATH, chunks={"time":1})[var]
-
-        # Set longitude from 0 to 360 to -180 to 180 and sort by longitude
-        truth['longitude'] = (truth['longitude'] + 180) % 360 - 180
+        # Open truth and interpolate on model grid
+        truth = xr.open_zarr(_TRUTH_PATH, chunks={"time": 1})[var]
+        truth["longitude"] = (truth["longitude"] + 180) % 360 - 180
         truth = truth.sortby(truth.longitude)
         truth = truth.isel(level=~truth["level"].to_index().duplicated())
-        truth = truth.interp(longitude=model.longitude, latitude=model.latitude, level=model.level, time=model.time, method='linear').sortby('level')
+        truth = truth.interp(
+            longitude=model.longitude,
+            latitude=model.latitude,
+            level=model.level,
+            time=model.time,
+            method="linear",
+        ).sortby("level")
+
+        # Ensemble spread statistics (independent of truth members)
+        ens_std = model.std(dim="member", ddof=0).rename(f"{var}_std")
+        ens_var = model.var(dim="member", ddof=0).rename(f"{var}_var")
+        n = xr.ones_like(ens_std).rename(f"{var}_n")
 
         results = []
 
+        # If truth has members, compute CRPS against each truth member
         if "member" in truth.dims:
-            members_iter = truth["member"].values
+            truth_members_iter = truth["member"].values
         else:
-            members_iter = [None]   # caso deterministico: un solo giro
+            truth_members_iter = [None]
 
+        for m in truth_members_iter:
+            if m is None:
+                truth_sel = truth
+                truth_member_name = "truth"
+            else:
+                truth_sel = truth.sel(member=m)
+                truth_member_name = str(m)
+                if "member" in truth_sel.dims:
+                    truth_sel = truth_sel.squeeze("member", drop=True)
 
-        std = model.std(dim="member").rename(f"{var}_std")
-        var = model.var(dim="member").rename(f"{var}_var")
-        n = xr.ones_like(std).rename(f"{var}_n")
+            crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
+                member=[truth_member_name]
+            )
 
-        for m in members_iter:
-
-            new_name = f"{m}"
-            truth_sel = truth.sel(member=m)
-
-            # qui puoi fare squeeze solo se davvero rimane member di size=1
-            if "member" in truth_sel.dims:
-                truth_sel = truth_sel.squeeze("member", drop=True)
-
-            crps = crps_ensemble_xarray(model, truth_sel)
-            crps = crps.rename(f"{var}_crps").expand_dims(member=[new_name])
-            ds = xr.merge([std, n, crps])
-            results.append(ds)
+            # Replicate ens stats along the output "member" dimension for consistent concat
+            ds_out_one = xr.merge(
+                [
+                    ens_std.expand_dims(member=[truth_member_name]),
+                    ens_var.expand_dims(member=[truth_member_name]),
+                    n.expand_dims(member=[truth_member_name]),
+                    crps,
+                ]
+            )
+            results.append(ds_out_one)
 
         ds_out = xr.concat(results, dim="member")
         ds_out.to_netcdf(_INCRE_FILE)
 
         model.close()
-        #os.remove(_MODEL_FILE)                    # Remove model output
+        truth.close()
 
-    
-    truth.close()
 
-    
-    
 if __name__ == "__main__":
     main()

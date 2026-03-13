@@ -53,7 +53,7 @@ def main() -> None:
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
 
     for var in output_vars:
-
+        OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/"
         _INCRE_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-probabilistic.nc"
 
         # Load all the generated members
@@ -62,7 +62,7 @@ def main() -> None:
         models = []
         for member in members:
 
-            OUTPUT_BASE_PATH = f"{_OUTPUT_PATH}/{var}/"
+            
             _MODEL_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-{member}-{var}.nc"
             
             model = xr.open_dataset(_MODEL_FILE)
@@ -131,7 +131,7 @@ def main() -> None:
         ds_out.to_netcdf(_INCRE_FILE)
 
         model.close()
-        os.remove(_MODEL_FILE)                    # Remove model output
+        #os.remove(_MODEL_FILE)                    # Remove model output
 
     
     truth.close()

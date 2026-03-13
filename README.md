@@ -2,15 +2,9 @@
 
 AIUQ-Diagnostic extends the job graph of **AIUQ-Engine**, enabling the computation of diagnostic metrics on top of AI-based forecast inference workflows.
 
-AIUQ-Engine is currently updated to version  
-👉 https://github.com/JGrassi97/AIUQ/tree/v0.1.1  
-
-Please refer to that version’s documentation for the list of available models and initial conditions (ICs).
+AIUQ-Engine is currently updated to version [v0.1.1](https://github.com/JGrassi97/AIUQ/tree/v0.1.1) Please refer to that version’s documentation for the list of available models and initial conditions (ICs).
 
 ---
-
-## Overview
-
 AIUQ-Diagnostic expands the standard inference pipeline by adding **streaming diagnostic metric computation**.
 
 Instead of storing full forecast fields, the system:

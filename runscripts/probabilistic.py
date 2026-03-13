@@ -111,6 +111,11 @@ def main() -> None:
         else:
             members_iter = [None]   # caso deterministico: un solo giro
 
+
+        std = model.std(dim="member").rename(f"{var}_std")
+        var = model.var(dim="member").rename(f"{var}_var")
+        n = xr.ones_like(std).rename(f"{var}_n")
+
         for m in members_iter:
 
             new_name = f"{m}"
@@ -120,9 +125,7 @@ def main() -> None:
             if "member" in truth_sel.dims:
                 truth_sel = truth_sel.squeeze("member", drop=True)
 
-            std = model.std(dim="member").expand_dims(member=[new_name])
-
-            n = xr.ones_like(std).rename(f"{var}_n")
+            
 
             ds = xr.merge([std, n])
             results.append(ds)

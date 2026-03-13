@@ -34,6 +34,23 @@ def _preprocess_longitude(ds):
         ds = ds.interpolate_na('longitude', method='nearest', fill_value='extrapolate')
         return ds
 
+def crps_ensemble_xarray(da, truth):
+    """
+    Compute the CRPS for an ensemble forecast in xarray.
+    Use the rotation invariance formula.
+    """
+
+    M = da.sizes["member"]
+
+    # ---- term1 = E|X - y|
+    term1 = np.abs(truth - da).mean(dim="member")
+
+    # ---- term2 = 0.5 * E|X - X'|
+    diffs = np.abs(da - da.rename(member="member2"))
+    term2 = 0.5 * diffs.mean(dim=("member", "member2"))
+
+    return term1 - term2
+
 def main() -> None:
 
     # Read config
@@ -125,9 +142,9 @@ def main() -> None:
             if "member" in truth_sel.dims:
                 truth_sel = truth_sel.squeeze("member", drop=True)
 
-            
-
-            ds = xr.merge([std, n])
+            crps = crps_ensemble_xarray(model, truth_sel)
+            crps = crps.rename(f"{var}_crps").expand_dims(member=[new_name])
+            ds = xr.merge([std, n, crps])
             results.append(ds)
 
         ds_out = xr.concat(results, dim="member")

@@ -63,7 +63,7 @@ def main() -> None:
         for member in members:
 
             
-            _MODEL_FILE = f"{OUTPUT_BASE_PATH}/out-{_START_TIME}-{_END_TIME}-{member}-{var}.nc"
+            _MODEL_FILE = f"/{OUTPUT_BASE_PATH}/{str(member)}/out-{_START_TIME}-{_END_TIME}-{member}-{var}.nc"
             
             model = xr.open_dataset(_MODEL_FILE)
 

@@ -52,7 +52,7 @@ def main() -> None:
     # Se vuoi un unico file per tutte le var, si può fare, ma serve nomi univoci.
     for var in output_vars:
         counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter-probabilistic.nc"
-
+        base = f"{_OUTPUT_PATH}/{var}"
         incre_file_prob = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-probabilistic.nc"  # (nome tuo)
         ds_prob = xr.open_dataset(incre_file_prob)
 
@@ -107,6 +107,9 @@ def main() -> None:
 
     # Remove truth
     shutil.rmtree(_TRUTH_PATH, ignore_errors=True)
+
+
+    
 
 
 if __name__ == "__main__":

@@ -1,8 +1,14 @@
 # AIUQ-diagnostic
-Diagnostic system for uncertainty quantification of AI-based weather forecasting models.
 
+AIUQ-diagnostic inheretis the job graph from AIUQ-engine, which allows the inference with AI models. Right now, AIUQ-engine is updated to the version [v0.1.1](https://github.com/JGrassi97/AIUQ/tree/v0.1.1), please refer to the version documentation for a list of models/ics available. The jobs graph is here exapanded allowing to compute diagnostic metrics in streaming, and saving only the counters and final results. In this way, it is possible to evaluate very large ensemble of AI models for long simulations with few archiviation space.
 
+The metrics described above are computed for each grid point and and lead time, but the initialization time dimension is lost during the aggregation.
 
+### Deterministic metrics
+These metrics are computed comparing the single forecast realization with the ground truth. If the ground truth is made of multiple members, these metrics are computed over all the members.
+
+### Probabilistic metrics
+These metrics require an ensemble of realization to be computed. If the ground truth is made of multiple members, these metrics are computed over all the members.
 
 ```
 autosubmit expid \
@@ -12,12 +18,6 @@ autosubmit expid \
   --git_as_conf conf/bootstrap/ \
   --git_repo https://github.com/JGrassi97/AIUQ-diagnostic.git \
   --git_branch main
-```
-
-
-### Update the engine:
-```
-git submodule update --remote --merge  
 ```
 
 ### Create the config.yml
@@ -56,9 +56,17 @@ PATHS:
 
 PLATFORM:
   NAME: MARENOSTRUM5  # FELIPE / MARENOSTRUM5
+  USER_CODE: ...
 
 # If you use eerie
 EERIE:
   HOST: ...
   PATH: ...
+```
+
+
+### Developers guide
+#### Update the engine:
+```
+git submodule update --remote --merge  
 ```

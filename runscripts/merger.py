@@ -51,34 +51,48 @@ def main() -> None:
     # Un counter per var (molto più semplice e meno rischi di collisioni tra var)
     # Se vuoi un unico file per tutte le var, si può fare, ma serve nomi univoci.
     for var in output_vars:
-        counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter.nc"
+        counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter-probabilistic.nc"
 
-        ds_members = []
+        incre_file_prob = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-probabilistic.nc"  # (nome tuo)
+        ds_prob = xr.open_dataset(incre_file_prob)
+
+        ds_prob = _to_lead_time(ds_prob)
+
+        # aggiorna counter su disco
+        if not os.path.exists(counter_file):
+            safe_write_netcdf(ds_all, counter_file)
+        else:
+            ds_counter = xr.open_dataset(counter_file)
+            ds_counter, ds_prob = xr.align(ds_counter, ds_prob, join="outer")
+            ds_new = ds_counter.fillna(0) + ds_prob.fillna(0)
+            ds_counter.close()
+
+            safe_write_netcdf(ds_new, counter_file)
+        
+        ds_prob.close()
+        os.remove(incre_file_prob)
+        
+
+
+
+        counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter-deterministic.nc"
+        ds_dete_members = []
         for key in _MEMBERS.split():
             base = f"{_OUTPUT_PATH}/{var}/{str(key)}"
-            incre_file = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-deterministic.nc"  # (nome tuo)
+            incre_file_det = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-deterministic.nc"  # (nome tuo)
 
-            if not os.path.exists(incre_file):
-                continue
-
-            ds = xr.open_dataset(incre_file)
-
-            # # aggiungi dimensione member
-            # ds = ds.expand_dims(member=[str(key)])
-
+            ds_dete = xr.open_dataset(incre_file_det)
+            
             # se vuoi lead_time al posto di time (opzionale)
-            ds = _to_lead_time(ds)
+            ds_dete = _to_lead_time(ds_dete)
+            ds_dete_members.append(ds_dete)
 
-            ds_members.append(ds)
-
-            ds.close()
-            os.remove(incre_file)
-
-        if not ds_members:
-            continue
+            
+            ds_dete_members.close()
+            os.remove(incre_file_det)
 
         # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)
-        ds_all = xr.concat(ds_members, dim="member")
+        ds_all = xr.concat(ds_dete_members, dim="member")
 
         # aggiorna counter su disco
         if not os.path.exists(counter_file):

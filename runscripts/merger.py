@@ -51,16 +51,17 @@ def main() -> None:
     # Un counter per var (molto più semplice e meno rischi di collisioni tra var)
     # Se vuoi un unico file per tutte le var, si può fare, ma serve nomi univoci.
     for var in output_vars:
+
         counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter-probabilistic.nc"
         base = f"{_OUTPUT_PATH}/{var}"
-        incre_file_prob = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-probabilistic.nc"  # (nome tuo)
+        incre_file_prob = f"{base}/out-{_START_TIME}-{_END_TIME}-probabilistic.nc"  # (nome tuo)
         ds_prob = xr.open_dataset(incre_file_prob)
 
         ds_prob = _to_lead_time(ds_prob)
 
         # aggiorna counter su disco
         if not os.path.exists(counter_file):
-            safe_write_netcdf(ds_all, counter_file)
+            safe_write_netcdf(ds_prob, counter_file)
         else:
             ds_counter = xr.open_dataset(counter_file)
             ds_counter, ds_prob = xr.align(ds_counter, ds_prob, join="outer")
@@ -88,7 +89,7 @@ def main() -> None:
             ds_dete_members.append(ds_dete)
 
             
-            ds_dete_members.close()
+            ds_dete.close()
             os.remove(incre_file_det)
 
         # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)

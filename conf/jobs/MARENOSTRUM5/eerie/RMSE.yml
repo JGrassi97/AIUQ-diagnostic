@@ -17,11 +17,21 @@ JOBS:
     PROCESSORS: 40
     CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
 
-  RMSE:
+  DETERMINISTIC:
     CHECK: on_submission
     FILE: templates/deterministic.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5ACC"
     RUNNING: CHUNK
+    DEPENDENCIES: RESAMPLE_GROUND_TRUTH POSTPROCESS SIM
+    NODES: 1
+    PROCESSORS: 20
+    CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"
+
+  PROBABILISTIC:
+    CHECK: on_submission
+    FILE: templates/probabilistic.sh,templates/config.yml
+    PLATFORM: "MARENOSTRUM5ACC"
+    RUNNING: DATE
     DEPENDENCIES: RESAMPLE_GROUND_TRUTH POSTPROCESS SIM
     NODES: 1
     PROCESSORS: 20
@@ -32,7 +42,7 @@ JOBS:
     FILE: templates/merger.sh,templates/config.yml
     PLATFORM: "MARENOSTRUM5-LOGIN-NOOVERLAP"
     RUNNING: DATE
-    DEPENDENCIES: RMSE
+    DEPENDENCIES: DETERMINISTIC PROBABILISTIC
     NODES: 1
     PROCESSORS: 20
     CUSTOM_DIRECTIVES: "#SBATCH --gres=gpu:1"

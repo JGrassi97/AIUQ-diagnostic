@@ -90,6 +90,8 @@ EXPERIMENT:
   OUT_FREQ: daily         # original / daily
   OUT_RES: "1"              # original / 0.25 / 0.5 / 1 / 1.5 / 2
   OUT_LEVS: [1000, 850, 700, 500, 250, 100]              # List of values in hPa or 'original' - 
+
+  REDUCE: "false"       # true / false
   
   # Here reported from https://github.com/PCMDI/cmip6-cmor-tables/blob/087fe45d21c082e28723e0f930e4266abe91b853/Tables/CMIP6_coordinate.json#L1640
 

@@ -43,6 +43,7 @@ def main() -> None:
     _OUTPUT_PATH  = config.get("OUTPUT_PATH", "")
     _MEMBERS      = config.get("MEMBERS", "")
     _HPCROOTDIR     = config.get("HPCROOTDIR", "")
+    _REDUCE      = os.environ.get("REDUCE", "false").lower() == "true"
 
     output_vars = normalize_out_vars(_OUT_VARS)
 
@@ -77,23 +78,30 @@ def main() -> None:
 
 
         counter_file = f"{_OUTPUT_PATH}/{var}/metrics-counter-deterministic.nc"
-        ds_dete_members = []
-        for key in _MEMBERS.split():
-            base = f"{_OUTPUT_PATH}/{var}/{str(key)}"
-            incre_file_det = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-deterministic.nc"  # (nome tuo)
-
-            ds_dete = xr.open_dataset(incre_file_det)
-            
-            # se vuoi lead_time al posto di time (opzionale)
-            ds_dete = _to_lead_time(ds_dete)
-            ds_dete_members.append(ds_dete)
-
-            
-            ds_dete.close()
+        if _REDUCE:
+            incre_file_det = f"{_OUTPUT_PATH}/{var}/out-{_START_TIME}-{_END_TIME}-deterministic-reduced.nc"
+            ds_det = xr.open_dataset(incre_file_det)
+            ds_all = _to_lead_time(ds_det).load()
+            ds_det.close()
             os.remove(incre_file_det)
+        else:
+            ds_dete_members = []
+            for key in _MEMBERS.split():
+                base = f"{_OUTPUT_PATH}/{var}/{str(key)}"
+                incre_file_det = f"{base}/out-{_START_TIME}-{_END_TIME}-{key}-deterministic.nc"  # (nome tuo)
 
-        # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)
-        ds_all = xr.concat(ds_dete_members, dim="member")
+                ds_dete = xr.open_dataset(incre_file_det)
+                
+                # se vuoi lead_time al posto di time (opzionale)
+                ds_dete = _to_lead_time(ds_dete).load()
+                ds_dete_members.append(ds_dete)
+
+                
+                ds_dete.close()
+                os.remove(incre_file_det)
+
+            # concat su member: dataset shape (member, lead_time/time, level, lat, lon, ...)
+            ds_all = xr.concat(ds_dete_members, dim="member")
 
         # aggiorna counter su disco
         if not os.path.exists(counter_file):

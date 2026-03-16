@@ -123,10 +123,12 @@ def main() -> None:
 
         # Ensemble spread statistics (independent of truth members)
         ens_std = model.std(dim="member", ddof=0).rename(f"{var}_std")
-        ens_var = model.var(dim="member", ddof=0).rename(f"{var}_var")
+        ens_std_real = truth.std(dim="member", ddof=0).rename(f"{var}_std_truth") if "member" in truth.dims else None
+
+        #ens_var = model.var(dim="member", ddof=0).rename(f"{var}_var")
         n = xr.ones_like(ens_std).rename(f"{var}_n")
 
-        results = []
+        crps_results = []
 
         # If truth has members, compute CRPS against each truth member
         if "member" in truth.dims:
@@ -147,19 +149,19 @@ def main() -> None:
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
                 member=[truth_member_name]
             )
+            crps_results.append(crps)
 
-            # Replicate ens stats along the output "member" dimension for consistent concat
-            ds_out_one = xr.merge(
-                [
-                    ens_std.expand_dims(member=[truth_member_name]),
-                    ens_var.expand_dims(member=[truth_member_name]),
-                    n.expand_dims(member=[truth_member_name]),
-                    crps,
-                ]
-            )
-            results.append(ds_out_one)
+        crps_all = xr.concat(crps_results, dim="member")
 
-        ds_out = xr.concat(results, dim="member")
+        ds_out = xr.merge(
+            [
+                ens_std,
+                ens_std_real,
+                #ens_var,
+                n,
+                crps_all,
+            ]
+        )
         ds_out.to_netcdf(_INCRE_FILE)
 
         model.close()

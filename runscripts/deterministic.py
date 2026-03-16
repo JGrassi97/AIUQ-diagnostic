@@ -181,7 +181,7 @@ def main() -> None:
             ds.close()
             os.remove(_MODEL_FILE)
 
-    truth.close()
+        truth.close()
 
 
 if __name__ == "__main__":

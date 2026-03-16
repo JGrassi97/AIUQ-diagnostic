@@ -32,6 +32,7 @@ def main() -> None:
     _IC             = config.get("IC_NAME", "")
     _STD_VERSION    = config.get("STD_VERSION", "")
     _OUT_LEVS       = config.get("OUT_LEVS", "")
+    _EERIE_MEMBERS  = os.environ.get("EERIE_MEMBERS", "1 2 3")
 
     if _OUT_LEVS != 'original':
         desired_levels = [
@@ -49,10 +50,11 @@ def main() -> None:
     # To add in config
     _TRUTH_PATH_TEMP    = os.path.join(_HPCROOTDIR, 'truth', 'temp' , _START_TIME)
     _TRUTH_PATH    = os.path.join(_HPCROOTDIR, 'truth', _START_TIME, 'truth_store.zarr')
+    eerie_members = _EERIE_MEMBERS.split()
 
     data = []
     for var in output_vars:
-        for member in ['1','2','3']:
+        for member in eerie_members:
             path = f'{_TRUTH_PATH_TEMP}/{var}/{member}'
 
             files = os.listdir(path)

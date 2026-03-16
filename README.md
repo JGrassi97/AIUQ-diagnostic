@@ -103,6 +103,7 @@ PLATFORM:
 
 # If you use eerie
 EERIE:
+  MEMBERS: "1 2 3"
   HOST: ...
   PATH: ...
 ```

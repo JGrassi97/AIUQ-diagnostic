@@ -17,6 +17,7 @@ HPCHOST=%HPCHOST%
 
 SRC_HOST=%EERIE.HOST%
 SRC_BASE=%EERIE.PATH%
+EERIE_MEMBERS="%EERIE.MEMBERS%"
 DST_HOST="${HPCUSER}@${HPCHOST}"
 
 SRC_BASE="${SRC_BASE%/}"
@@ -105,7 +106,12 @@ PY
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
 
 DEST_BASE="${HPCROOTDIR}/truth/temp"
-MEMBERS=(1 2 3)
+read -r -a MEMBERS <<< "$EERIE_MEMBERS"
+
+if [ "${#MEMBERS[@]}" -eq 0 ]; then
+  echo "ERROR: EERIE_MEMBERS is empty" >&2
+  exit 1
+fi
 
 # Build VARS array (bash 3.2 compatible)
 VARS=()

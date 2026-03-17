@@ -150,6 +150,9 @@ def main() -> None:
                 if "member" in truth_sel.dims:
                     truth_sel = truth_sel.squeeze("member", drop=True)
 
+            crps_truth = crps_ensemble_xarray(truth.drop_sel(member=m), truth_sel).rename(f"{var}_crps_truth").expand_dims(
+                member=[truth_member_name]
+            )
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
                 member=[truth_member_name]
             )
@@ -163,12 +166,13 @@ def main() -> None:
                 member=[truth_member_name]
             )
 
+            crps_results.append(crps_truth)
             crps_results.append(crps)
             crps_results.append(crps_centered)
             crps_results.append(crps_unitary_std)
             crps_results.append(crps_normalized)
 
-        crps_all = xr.concat(crps_results, dim="member")
+        crps_all = xr.merge(crps_results, join="outer")
 
         ds_out = xr.merge(
             [

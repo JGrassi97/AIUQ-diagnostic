@@ -125,6 +125,10 @@ def main() -> None:
         ens_std = model.std(dim="member", ddof=0).rename(f"{var}_std")
         ens_std_real = truth.std(dim="member", ddof=0).rename(f"{var}_std_truth") if "member" in truth.dims else None
 
+        model_centred = model - model.mean(dim="member")
+        model_unitary_std = model / model.std(dim="member", ddof=0)
+        model_normalized = model_centred / model_centred.std(dim="member", ddof=0)
+
         #ens_var = model.var(dim="member", ddof=0).rename(f"{var}_var")
         n = xr.ones_like(ens_std).rename(f"{var}_n")
 
@@ -147,6 +151,15 @@ def main() -> None:
                     truth_sel = truth_sel.squeeze("member", drop=True)
 
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
+                member=[truth_member_name]
+            )
+            crps_centered = crps_ensemble_xarray(model_centred, truth_sel).rename(f"{var}_crps_centered").expand_dims(
+                member=[truth_member_name]
+            )
+            crps_unitary_std = crps_ensemble_xarray(model_unitary_std, truth_sel).rename(f"{var}_crps_unitary_std").expand_dims(
+                member=[truth_member_name]
+            )
+            crps_normalized = crps_ensemble_xarray(model_normalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
                 member=[truth_member_name]
             )
             crps_results.append(crps)

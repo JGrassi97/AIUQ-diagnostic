@@ -162,7 +162,11 @@ def main() -> None:
             crps_normalized = crps_ensemble_xarray(model_normalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
                 member=[truth_member_name]
             )
+
             crps_results.append(crps)
+            crps_results.append(crps_centered)
+            crps_results.append(crps_unitary_std)
+            crps_results.append(crps_normalized)
 
         crps_all = xr.concat(crps_results, dim="member")
 

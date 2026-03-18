@@ -138,11 +138,13 @@ def main() -> None:
         # 1. Forecast centered on truth mean
         model_centred = (model - model_mean) + truth_mean
 
-        # 2. Forecast with truth std and truth mean
-        model_rescaled = ((model - model_mean) / model_std) * truth_std + truth_mean
+        # 2 Forecast with truth std but model mean
+        model_rescaled = (model/model_std) * truth_std
 
-        # 3. Forecast and truth both normalized on truth scale
-        model_normalized = (model - truth_mean) / truth_std
+        # 3. Forecast with truth std and truth mean
+        model_mormalized = ((model - model_mean) / model_std) * truth_std + truth_mean
+
+
 
         n = xr.ones_like(ens_std).rename(f"{var}_n")
 
@@ -164,7 +166,6 @@ def main() -> None:
                 if "member" in truth_sel.dims:
                     truth_sel = truth_sel.squeeze("member", drop=True)
             
-            truth_sel_normalized = (truth_sel - truth_mean) / truth_std
 
             crps_truth = crps_ensemble_xarray(truth, truth_sel).rename(f"{var}_crps_truth").expand_dims(
                 member=[truth_member_name]
@@ -178,9 +179,10 @@ def main() -> None:
             crps_rescaled = crps_ensemble_xarray(model_rescaled, truth_sel).rename(f"{var}_crps_rescaled").expand_dims(
                 member=[truth_member_name]
             )
-            crps_normalized = crps_ensemble_xarray(model_normalized, truth_sel_normalized).rename(f"{var}_crps_normalized").expand_dims(
+            crps_normalized = crps_ensemble_xarray(model_mormalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
                 member=[truth_member_name]
             )
+
 
             crps_results.append(crps_truth)
             crps_results.append(crps)

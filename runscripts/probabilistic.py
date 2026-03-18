@@ -166,7 +166,7 @@ def main() -> None:
             
             truth_sel_normalized = (truth_sel - truth_mean) / truth_std
 
-            crps_truth = crps_ensemble_xarray(truth.drop_sel(member=m), truth_sel).rename(f"{var}_crps_truth").expand_dims(
+            crps_truth = crps_ensemble_xarray(truth, truth_sel).rename(f"{var}_crps_truth").expand_dims(
                 member=[truth_member_name]
             )
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(

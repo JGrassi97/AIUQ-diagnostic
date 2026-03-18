@@ -128,6 +128,13 @@ def main() -> None:
         model_mean = model.mean(dim="member")
         model_std = model.std(dim="member", ddof=0)
 
+        # This framework needs truth member spread to define the "spread contribution"
+        if "member" not in truth.dims:
+            raise ValueError(
+                f"Truth for variable '{var}' has no 'member' dimension. "
+                "Cannot separate bias / spread / residual contributions without truth ensemble spread."
+            )
+
         truth_mean = truth.mean(dim="member")
         truth_std = truth.std(dim="member", ddof=0)
 
@@ -135,41 +142,34 @@ def main() -> None:
         model_std = xr.where(model_std < eps, eps, model_std)
         truth_std = xr.where(truth_std < eps, eps, truth_std)
 
-        # 1. Forecast centered on truth mean
+        # 1. Forecast centered on truth mean: fixes only bias
         model_centred = (model - model_mean) + truth_mean
 
-        # 2 Forecast with truth std but model mean
-        model_rescaled = (model/model_std) * truth_std
+        # 2. Forecast with truth std but model mean: fixes only spread
+        model_rescaled = ((model - model_mean) / model_std) * truth_std + model_mean
 
-        # 3. Forecast with truth std and truth mean
-        model_mormalized = ((model - model_mean) / model_std) * truth_std + truth_mean
-
-
+        # 3. Forecast with truth std and truth mean: fixes both bias and spread
+        model_normalized = ((model - model_mean) / model_std) * truth_std + truth_mean
 
         n = xr.ones_like(ens_std).rename(f"{var}_n")
 
         crps_results = []
 
         # If truth has members, compute CRPS against each truth member
-        if "member" in truth.dims:
-            truth_members_iter = truth["member"].values
-        else:
-            truth_members_iter = [None]
+        truth_members_iter = truth["member"].values
 
         for m in truth_members_iter:
-            if m is None:
-                truth_sel = truth
-                truth_member_name = "truth"
-            else:
-                truth_sel = truth.sel(member=m)
-                truth_member_name = str(m)
-                if "member" in truth_sel.dims:
-                    truth_sel = truth_sel.squeeze("member", drop=True)
-            
+            truth_sel = truth.sel(member=m)
+            truth_member_name = str(m)
+            if "member" in truth_sel.dims:
+                truth_sel = truth_sel.squeeze("member", drop=True)
 
+            # Reference CRPS of truth ensemble against one truth member
             crps_truth = crps_ensemble_xarray(truth, truth_sel).rename(f"{var}_crps_truth").expand_dims(
                 member=[truth_member_name]
             )
+
+            # Raw and counterfactual CRPS
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
                 member=[truth_member_name]
             )
@@ -179,28 +179,55 @@ def main() -> None:
             crps_rescaled = crps_ensemble_xarray(model_rescaled, truth_sel).rename(f"{var}_crps_rescaled").expand_dims(
                 member=[truth_member_name]
             )
-            crps_normalized = crps_ensemble_xarray(model_mormalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
+            crps_normalized = crps_ensemble_xarray(model_normalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
                 member=[truth_member_name]
             )
 
+            # Symmetric attribution of the explained discrepancy
+            bias_contrib = (
+                0.5 * ((crps - crps_centered) + (crps_rescaled - crps_normalized))
+            ).rename(f"{var}_crps_bias_contrib")
 
-            crps_results.append(crps_truth)
-            crps_results.append(crps)
-            crps_results.append(crps_centered)
-            crps_results.append(crps_rescaled)
-            crps_results.append(crps_normalized)
+            spread_contrib = (
+                0.5 * ((crps - crps_rescaled) + (crps_centered - crps_normalized))
+            ).rename(f"{var}_crps_spread_contrib")
+
+            # Unexplained remainder after correcting mean and spread
+            residual_contrib = crps_normalized.rename(f"{var}_crps_residual_contrib")
+
+            # Optional normalized fractions of total discrepancy
+            total_contrib = (bias_contrib + spread_contrib + residual_contrib)
+            total_safe = xr.where(np.abs(total_contrib) < eps, np.nan, total_contrib)
+
+            bias_frac = (bias_contrib / total_safe).rename(f"{var}_crps_bias_frac")
+            spread_frac = (spread_contrib / total_safe).rename(f"{var}_crps_spread_frac")
+            residual_frac = (residual_contrib / total_safe).rename(f"{var}_crps_residual_frac")
+
+            crps_results.extend([
+                crps_truth,
+                crps,
+                crps_centered,
+                crps_rescaled,
+                crps_normalized,
+                bias_contrib.expand_dims(member=[truth_member_name]),
+                spread_contrib.expand_dims(member=[truth_member_name]),
+                residual_contrib.expand_dims(member=[truth_member_name]),
+                bias_frac.expand_dims(member=[truth_member_name]),
+                spread_frac.expand_dims(member=[truth_member_name]),
+                residual_frac.expand_dims(member=[truth_member_name]),
+            ])
 
         crps_all = xr.merge(crps_results, join="outer")
 
-        ds_out = xr.merge(
-            [
-                ens_std,
-                ens_std_real,
-                #ens_var,
-                n,
-                crps_all,
-            ]
-        )
+        merge_list = [
+            ens_std,
+            n,
+            crps_all,
+        ]
+        if ens_std_real is not None:
+            merge_list.insert(1, ens_std_real)
+
+        ds_out = xr.merge(merge_list)
         ds_out.to_netcdf(_INCRE_FILE)
 
         model.close()

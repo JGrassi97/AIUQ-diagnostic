@@ -49,6 +49,13 @@ def crps_ensemble_xarray(da, truth):
     return term1 - term2
 
 
+def _ensure_member_dim(da, member_name):
+    """Add member dimension only when missing."""
+    if "member" in da.dims:
+        return da
+    return da.expand_dims(member=[member_name])
+
+
 def main() -> None:
     # Read config
     args = parse_arguments()
@@ -209,12 +216,12 @@ def main() -> None:
                 crps_centered,
                 crps_rescaled,
                 crps_normalized,
-                bias_contrib.expand_dims(member=[truth_member_name]),
-                spread_contrib.expand_dims(member=[truth_member_name]),
-                residual_contrib.expand_dims(member=[truth_member_name]),
-                bias_frac.expand_dims(member=[truth_member_name]),
-                spread_frac.expand_dims(member=[truth_member_name]),
-                residual_frac.expand_dims(member=[truth_member_name]),
+                _ensure_member_dim(bias_contrib, truth_member_name),
+                _ensure_member_dim(spread_contrib, truth_member_name),
+                _ensure_member_dim(residual_contrib, truth_member_name),
+                _ensure_member_dim(bias_frac, truth_member_name),
+                _ensure_member_dim(spread_frac, truth_member_name),
+                _ensure_member_dim(residual_frac, truth_member_name),
             ])
 
         crps_all = xr.merge(crps_results, join="outer")

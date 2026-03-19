@@ -50,6 +50,15 @@ Currently supported metrics:
 
 ---
 
+## New features in v0.1.0
+
+- Configurable truth members for EERIE workflows via `EERIE.MEMBERS`.
+- Deterministic pipeline support for `REDUCE` mode.
+- Probabilistic robustness improvements for CRPS processing (safe member-dimension handling).
+- Simplified probabilistic outputs focused on core and counterfactual CRPS fields.
+- Ground-truth copy is now resilient to missing source files (warn and skip instead of failing the job).
+- AIUQ-engine submodule remains aligned to v0.1.1.
+
 
 ## Usage 
 

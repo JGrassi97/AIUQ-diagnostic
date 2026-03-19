@@ -51,6 +51,19 @@ fi
 copy_file() {
   local src="$1" dst="$2"
 
+  # Skip missing source files instead of failing the whole job.
+  if [ "$SAME_HOST" -eq 1 ]; then
+    if [ ! -f "$src" ]; then
+      echo "WARN: source file not found, skipping: $src" >&2
+      return 0
+    fi
+  else
+    if ! ssh $SSHOPTS "$SRC_HOST" "test -f '$src'" >/dev/null 2>&1; then
+      echo "WARN: source file not found on $SRC_HOST, skipping: $src" >&2
+      return 0
+    fi
+  fi
+
   if [ "$SAME_HOST" -eq 1 ]; then
     # Local copy: much faster than scp
     # Ensure parent exists (local)

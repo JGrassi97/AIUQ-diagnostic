@@ -17,6 +17,7 @@ HPCHOST=%HPCHOST%
 
 SRC_HOST=%EERIE.HOST%
 SRC_BASE=%EERIE.PATH%
+EERIE_MEMBERS="%EERIE.MEMBERS%"
 DST_HOST="${HPCUSER}@${HPCHOST}"
 
 SRC_BASE="${SRC_BASE%/}"
@@ -49,6 +50,19 @@ fi
 
 copy_file() {
   local src="$1" dst="$2"
+
+  # Skip missing source files instead of failing the whole job.
+  if [ "$SAME_HOST" -eq 1 ]; then
+    if [ ! -f "$src" ]; then
+      echo "WARN: source file not found, skipping: $src" >&2
+      return 0
+    fi
+  else
+    if ! ssh $SSHOPTS "$SRC_HOST" "test -f '$src'" >/dev/null 2>&1; then
+      echo "WARN: source file not found on $SRC_HOST, skipping: $src" >&2
+      return 0
+    fi
+  fi
 
   if [ "$SAME_HOST" -eq 1 ]; then
     # Local copy: much faster than scp
@@ -105,7 +119,12 @@ PY
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
 
 DEST_BASE="${HPCROOTDIR}/truth/temp"
-MEMBERS=(1 2 3)
+read -r -a MEMBERS <<< "$EERIE_MEMBERS"
+
+if [ "${#MEMBERS[@]}" -eq 0 ]; then
+  echo "ERROR: EERIE_MEMBERS is empty" >&2
+  exit 1
+fi
 
 # Build VARS array (bash 3.2 compatible)
 VARS=()

@@ -125,7 +125,25 @@ def main() -> None:
         ens_std = model.std(dim="member", ddof=0).rename(f"{var}_std")
         ens_std_real = truth.std(dim="member", ddof=0).rename(f"{var}_std_truth") if "member" in truth.dims else None
 
-        #ens_var = model.var(dim="member", ddof=0).rename(f"{var}_var")
+        model_mean = model.mean(dim="member")
+        model_std = model.std(dim="member", ddof=0)
+
+        truth_mean = truth.mean(dim="member")
+        truth_std = truth.std(dim="member", ddof=0)
+
+        eps = 1e-6
+        model_std = xr.where(model_std < eps, eps, model_std)
+        truth_std = xr.where(truth_std < eps, eps, truth_std)
+
+        # 1. Forecast centered on truth mean
+        model_centred = (model - model_mean) + truth_mean
+
+        # 2. Forecast with truth std but model mean
+        model_rescaled = ((model - model_mean) / model_std) * truth_std + model_mean
+
+        # 3. Forecast with truth std and truth mean
+        model_normalized = ((model - model_mean) / model_std) * truth_std + truth_mean
+
         n = xr.ones_like(ens_std).rename(f"{var}_n")
 
         crps_results = []
@@ -145,13 +163,32 @@ def main() -> None:
                 truth_member_name = str(m)
                 if "member" in truth_sel.dims:
                     truth_sel = truth_sel.squeeze("member", drop=True)
+            
 
+            crps_truth = crps_ensemble_xarray(truth, truth_sel).rename(f"{var}_crps_truth").expand_dims(
+                member=[truth_member_name]
+            )
             crps = crps_ensemble_xarray(model, truth_sel).rename(f"{var}_crps").expand_dims(
                 member=[truth_member_name]
             )
-            crps_results.append(crps)
+            crps_centered = crps_ensemble_xarray(model_centred, truth_sel).rename(f"{var}_crps_centered").expand_dims(
+                member=[truth_member_name]
+            )
+            crps_rescaled = crps_ensemble_xarray(model_rescaled, truth_sel).rename(f"{var}_crps_rescaled").expand_dims(
+                member=[truth_member_name]
+            )
+            crps_normalized = crps_ensemble_xarray(model_normalized, truth_sel).rename(f"{var}_crps_normalized").expand_dims(
+                member=[truth_member_name]
+            )
 
-        crps_all = xr.concat(crps_results, dim="member")
+
+            crps_results.append(crps_truth)
+            crps_results.append(crps)
+            crps_results.append(crps_centered)
+            crps_results.append(crps_rescaled)
+            crps_results.append(crps_normalized)
+
+        crps_all = xr.merge(crps_results, join="outer")
 
         ds_out = xr.merge(
             [

@@ -11,6 +11,7 @@ JOBNAME_WITHOUT_EXPID=$(echo ${JOBNAME} | sed 's/^[^_]*_//')
 logs_dir=${HPCROOTDIR}/LOG_${EXPID}
 configfile=$logs_dir/config_${JOBNAME_WITHOUT_EXPID}
 PLATFORM_NAME=%PLATFORM.NAME%
+EERIE_MEMBERS="%EERIE.MEMBERS%"
 
 OUTPUT_PATH=%HPCROOTDIR%/outputs
 
@@ -23,5 +24,6 @@ singularity exec --nv \
     --bind $HPCROOTDIR \
     --env HPCROOTDIR=$HPCROOTDIR \
     --env configfile=$configfile \
+    --env EERIE_MEMBERS="$EERIE_MEMBERS" \
     ${SIF_PATH} \
     python3 $HPCROOTDIR/runscripts/restore_eerie.py -c $configfile

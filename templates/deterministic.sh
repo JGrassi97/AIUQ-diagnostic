@@ -11,6 +11,7 @@ JOBNAME_WITHOUT_EXPID=$(echo ${JOBNAME} | sed 's/^[^_]*_//')
 logs_dir=${HPCROOTDIR}/LOG_${EXPID}
 configfile=$logs_dir/config_${JOBNAME_WITHOUT_EXPID}
 PLATFORM_NAME=%PLATFORM.NAME%
+REDUCE=%EXPERIMENT.REDUCE%
 
 OUTPUT_PATH=%HPCROOTDIR%/outputs
 
@@ -24,5 +25,6 @@ singularity exec --nv \
     --bind $OUTPUT_PATH \
     --env HPCROOTDIR=$HPCROOTDIR \
     --env configfile=$configfile \
+    --env REDUCE=$REDUCE \
     ${SIF_PATH} \
     python3 $HPCROOTDIR/runscripts/deterministic.py -c $configfile

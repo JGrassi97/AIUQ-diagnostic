@@ -58,7 +58,9 @@ copy_file() {
       return 0
     fi
   else
-    if ! ssh $SSHOPTS "$SRC_HOST" "test -f '$src'" >/dev/null 2>&1; then
+    # Important: redirect stdin from /dev/null so ssh does not consume
+    # the input stream used by the outer while-read loop.
+    if ! ssh $SSHOPTS "$SRC_HOST" "test -f '$src'" >/dev/null 2>&1 < /dev/null; then
       echo "WARN: source file not found on $SRC_HOST, skipping: $src" >&2
       return 0
     fi
@@ -74,8 +76,9 @@ copy_file() {
     # Alternative (often even better for many files): rsync
     # run "rsync -a --inplace \"$src\" \"$dst\""
   else
-    # Remote copy
-    run "scp $SSHOPTS -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\""
+    # Important: redirect stdin from /dev/null so scp does not consume
+    # the input stream used by the outer while-read loop.
+    run "scp $SSHOPTS -p \"$SRC_HOST\":\"$src\" \"$DST_HOST\":\"$dst\" < /dev/null"
   fi
 }
 
@@ -84,7 +87,9 @@ mk_dst_dir() {
   if [ "$SAME_HOST" -eq 1 ]; then
     run "mkdir -p \"$d\""
   else
-    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$d'\""
+    # Important: redirect stdin from /dev/null so ssh does not interfere
+    # with any surrounding while-read loops.
+    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$d'\" < /dev/null"
   fi
 }
 
@@ -144,7 +149,9 @@ fi
 
 # Warm up remote connection only if needed
 if [ "$SAME_HOST" -eq 0 ]; then
-  run "ssh $SSHOPTS \"$DST_HOST\" true"
+  # Important: redirect stdin from /dev/null so ssh does not consume
+  # input from later while-read loops.
+  run "ssh $SSHOPTS \"$DST_HOST\" true < /dev/null"
 fi
 
 # Create destination directories ONCE

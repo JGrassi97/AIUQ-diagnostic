@@ -35,7 +35,9 @@ Whenever you mention **commit**, **push**, **review**, or **pre-commit** in the 
 
 ### Phase 3b: Notion Update - Release Notes (Post-Commit)
 *Only after commit is successful and staged*
-- Search Notion for "Release Notes" page under the branch's parent (e.g., "AMIP Simulation")
+- Determine the current branch before any changelog action
+- If the current branch is `main` or `master`: do not create, update, or append any changelog / release notes entry
+- If the current branch is not `main` / `master`: search Notion for the release notes page specific to that branch context under the branch's parent (e.g., "Release Notes - AMIP Simulations" under "AMIP Simulation")
 - If found: append a new entry at the top of "Latest Releases" section with:
   - **Date**: Current date in `[YYYY-MM-DD]` format
   - **Title**: The commit message
@@ -44,6 +46,7 @@ Whenever you mention **commit**, **push**, **review**, or **pre-commit** in the 
   - **Impact**: One-liner about what this enables/fixes
   - **Breaking Changes**: Yes/No with details
 - If Release Notes page not found: create one under the branch parent with the template structure
+- Never write a feature-branch commit into a generic `main` changelog, and never maintain a changelog while operating directly on `main`
 
 ### Phase 4: Suggestions & Approval
 Before the user pushes:
@@ -66,6 +69,7 @@ Before the user pushes:
 
 ### Notion Structure
 - **Parent**: Auto-detect from current branch (e.g., "AMIP Simulation" for `features/amip-simulations`)
+- **Release Notes scope**: Must match the active branch context; do not reuse `main` or unrelated branch changelogs
 - **Format**: Markdown with code blocks, bullet lists, and links to files/lines
 - **Auto-fix notes**: Mark sections as "[DONE - automatic fix]" if fixes were already applied
 
@@ -81,6 +85,7 @@ git push origin $(current_branch)
 ### Skip Conditions
 - If no files are staged or unstaged: report "No changes detected"
 - If `.gitignore` is the only change: optionally skip Notion update (lightweight)
+- If the current branch is `main` or `master`: skip changelog / Release Notes updates entirely
 - If user explicitly says "skip review": proceed to push without workflow
 
 ---
@@ -94,7 +99,7 @@ git push origin $(current_branch)
 2. ✓ Analyzes diffs → finds edge case in checkpoint resume logic
 3. ✓ Creates page "Commit Check - 2026-03-18 (features/amip-simulations)" in Notion under AMIP Simulation
 4. ✓ Suggests fix with line numbers
-5. ✓ Updates Release Notes page with commit entry (post-commit)
+5. ✓ Updates the branch-specific Release Notes page with commit entry (post-commit)
 6. 📋 Asks: "**Apply fix to checkpoint edge case?** (yes/no)"
 7. 📋 Asks: "**Ready to stage & push?** (yes/no)"
 
@@ -105,7 +110,8 @@ git push origin $(current_branch)
 - Always operate within the AIUQ workspace repository
 - Use Notion integration for all documentation (never suggest external tools)
 - **Release Notes**: Maintained separately from Commit Checks for merge/changelog purposes
-  - Populated automatically after each successful commit
+  - Populated automatically after each successful commit only for non-`main` branches
+  - Must be specific to the active branch context
   - Used as source for PR descriptions and version tagging
 - If Notion page not found: create a new one under "Commit Logs" or ask user where to put it
 - Keep notes concise: focus on actionable items, not verbose prose

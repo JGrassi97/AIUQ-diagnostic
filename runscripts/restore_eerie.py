@@ -61,7 +61,21 @@ def main() -> None:
             files = [f for f in files if f.endswith('.nc')]
             files = [os.path.join(path, f) for f in files]
 
-            dat = xr.open_mfdataset(files)
+            valid_files = []
+            for f in files:
+                try:
+                    # Force a full read to catch corrupted files early.
+                    with xr.open_dataset(f) as ds:
+                        ds.load()
+                    valid_files.append(f)
+                except Exception as e:
+                    print(f"[WARNING] File corrotto saltato: {f} ({e})")
+
+            if not valid_files:
+                print(f"[WARNING] Nessun file valido per {var} membro {member}")
+                continue
+
+            dat = xr.open_mfdataset(valid_files)
             dat = dat.sel(isobaricInhPa=desired_levels)
             dat = dat.rename({'isobaricInhPa': 'level'})
             dat = dat.drop_vars('time_bnds')

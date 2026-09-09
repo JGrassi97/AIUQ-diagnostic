@@ -22,6 +22,10 @@ DST_HOST="${HPCUSER}@${HPCHOST}"
 
 SRC_BASE="${SRC_BASE%/}"
 
+SRC_ERA_HOST=%ERA.HOST%
+SRC_ERA_BASE=%ERA.PATH%
+SRC_ERA_BASE="${SRC_ERA_BASE%/}"
+
 # -----------------------
 # SSH reuse (faster for remote)
 # -----------------------
@@ -46,6 +50,11 @@ run() {
 SAME_HOST=0
 if [ "$SRC_HOST" = "$DST_HOST" ]; then
   SAME_HOST=1
+fi
+
+SAME_ERA_HOST=0
+if [ "$SRC_ERA_HOST" = "$DST_HOST" ]; then
+  SAME_ERA_HOST=1
 fi
 
 copy_file() {
@@ -93,6 +102,40 @@ mk_dst_dir() {
   fi
 }
 
+copy_era_file() {
+  local src="$1" dst="$2"
+
+  if [ "$SAME_ERA_HOST" -eq 1 ]; then
+    if [ ! -f "$src" ]; then
+      echo "WARN: source ERA file not found, skipping: $src" >&2
+      return 0
+    fi
+  else
+    if ! ssh $SSHOPTS "$SRC_ERA_HOST" "test -f '$src'" >/dev/null 2>&1 < /dev/null; then
+      echo "WARN: source ERA file not found on $SRC_ERA_HOST, skipping: $src" >&2
+      return 0
+    fi
+  fi
+
+  if [ "$SAME_ERA_HOST" -eq 1 ]; then
+    local dstdir
+    dstdir="$(dirname "$dst")"
+    run "mkdir -p \"$dstdir\""
+    run "cp -p \"$src\" \"$dst\""
+  else
+    run "scp $SSHOPTS -p \"$SRC_ERA_HOST\":\"$src\" \"$DST_HOST\":\"$dst\" < /dev/null"
+  fi
+}
+
+mk_era_dst_dir() {
+  local d="$1"
+  if [ "$SAME_ERA_HOST" -eq 1 ]; then
+    run "mkdir -p \"$d\""
+  else
+    run "ssh $SSHOPTS \"$DST_HOST\" \"mkdir -p '$d'\" < /dev/null"
+  fi
+}
+
 # -----------------------
 # Read config (YAML) -> bash vars
 # -----------------------
@@ -123,7 +166,8 @@ PY
 : "${END_TIME:?END_TIME empty}"
 : "${OUT_VARS_JSON:?OUT_VARS_JSON empty}"
 
-DEST_BASE="${HPCROOTDIR}/truth/temp"
+DEST_BASE_EERIE="${HPCROOTDIR}/truth/temp/eerie"
+DEST_BASE_ERA="${HPCROOTDIR}/truth/temp/era"
 read -r -a MEMBERS <<< "$EERIE_MEMBERS"
 
 if [ "${#MEMBERS[@]}" -eq 0 ]; then
@@ -153,11 +197,14 @@ if [ "$SAME_HOST" -eq 0 ]; then
   # input from later while-read loops.
   run "ssh $SSHOPTS \"$DST_HOST\" true < /dev/null"
 fi
+if [ "$SAME_ERA_HOST" -eq 0 ]; then
+  run "ssh $SSHOPTS \"$SRC_ERA_HOST\" true < /dev/null"
+fi
 
-# Create destination directories ONCE
+# Create EERIE destination directories ONCE
 for var in "${VARS[@]}"; do
   for mem in "${MEMBERS[@]}"; do
-    dst_dir="${DEST_BASE}/${START_TIME}/${var}/${mem}"
+    dst_dir="${DEST_BASE_EERIE}/${START_TIME}/${var}/${mem}"
     mk_dst_dir "$dst_dir"
   done
 done
@@ -167,7 +214,7 @@ while IFS= read -r ymd; do
   for var in "${VARS[@]}"; do
     for mem in "${MEMBERS[@]}"; do
       src_file="${SRC_BASE}/${var}/${mem}/${var}_${ymd}.nc"
-      dst_dir="${DEST_BASE}/${START_TIME}/${var}/${mem}"
+      dst_dir="${DEST_BASE_EERIE}/${START_TIME}/${var}/${mem}"
       dst_file="${dst_dir}/${var}_${ymd}.nc"
       copy_file "$src_file" "$dst_file"
     done
@@ -189,6 +236,49 @@ cur = start
 one = timedelta(days=1)
 while cur <= end:
     print(cur.strftime("%Y%m%d"))
+    cur += one
+PY
+)
+
+# -----------------------
+# ERA5 monthly files (no members)
+# -----------------------
+
+# Create ERA destination directories ONCE
+for var in "${VARS[@]}"; do
+  dst_dir="${DEST_BASE_ERA}/${START_TIME}/${var}"
+  mk_era_dst_dir "$dst_dir"
+done
+
+# Iterate months for ERA (portable, deduplicated)
+while IFS= read -r ym; do
+  for var in "${VARS[@]}"; do
+    src_file="${SRC_ERA_BASE}/${var}/${var}_${ym}.nc"
+    dst_dir="${DEST_BASE_ERA}/${START_TIME}/${var}"
+    dst_file="${dst_dir}/${var}_${ym}.nc"
+    copy_era_file "$src_file" "$dst_file"
+  done
+done < <(python3 - "$START_TIME" "$END_TIME" <<'PY'
+import sys
+from datetime import date, timedelta
+
+start_s = sys.argv[1]
+end_s   = sys.argv[2]
+
+y, m, d = map(int, start_s.split("-"))
+start = date(y, m, d)
+
+y, m, d = map(int, end_s.split("-"))
+end = date(y, m, d)
+
+seen = set()
+cur = start
+one = timedelta(days=1)
+while cur <= end:
+    ym = cur.strftime("%Y%m")
+    if ym not in seen:
+        seen.add(ym)
+        print(ym)
     cur += one
 PY
 )
